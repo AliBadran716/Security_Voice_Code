@@ -35,6 +35,17 @@ class MainApp(QMainWindow, FORM_CLASS):
         super(MainApp, self).__init__(parent)
         self.setupUi(self)
         self.handle_button()
+        self.passwords = {
+            "unlock_the_gate": ["unlock_the_gate.wav"    #wav file
+                                , None                   #similarity
+                                , None],                 #instance
+            "open_middle_door": ["open_middle_door.wav" 
+                                 , None 
+                                 , None   ],
+            "grant_me_access": ["grant_me_access.wav" 
+                                , None 
+                                , None   ],
+        }
 
     def handle_button(self):
         self.pushButton.clicked.connect(self.start_recording)
@@ -51,14 +62,30 @@ class MainApp(QMainWindow, FORM_CLASS):
             self.spectrogram(self.recorder.frames,44100,self.widget)
             self.spectrogram(self.recorder.frames,44100,self.widget)
             self.recorder.save_audio('trial.wav')
-            test_voice = Voice('trial.wav')    
-            password_voice = Voice('password.wav')
-            features1 = test_voice.get_amplitude()
-            features2 = password_voice.get_amplitude()  
-            features1, features2 = self.match_signal_length(features1, features2)
-            
-            similarity_score = np.linalg.norm(features1 - features2)
-            print(similarity_score)
+            test_voice = Voice('trial.wav')
+            for password in self.passwords:
+                self.passwords[password][2] = Voice(self.passwords[password][0])    
+            for password in self.passwords:
+                self.passwords[password][1] = self.check_similarity(test_voice, self.passwords[password][2])
+            max = 0
+            for password in self.passwords:
+                if self.passwords[password][1] > max:
+                    max = self.passwords[password][1]
+                    max_password = password
+
+            self.label.setText(max_password)
+
+
+
+    
+    def check_similarity(self, test_voice, password_voice):
+        features1 = test_voice.get_amplitude()
+        features2 = password_voice.get_amplitude()  
+        features1, features2 = self.match_signal_length(features1, features2)
+        
+        # similarity_score = np.linalg.norm(features1 - features2)
+        similarity_score = np.dot(features1, features2) / (np.linalg.norm(features1) * np.linalg.norm(features2))
+        return similarity_score
     
     def match_signal_length(self, signal1, signal2):
         max_length = max(len(signal1), len(signal2))

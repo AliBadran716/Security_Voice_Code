@@ -15,6 +15,30 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
+    <item row="0" column="1">
+     <widget class="QComboBox" name="comboBox">
+      <item>
+       <property name="text">
+        <string>ahmed</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>bedro</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>muhannad</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>ewees</string>
+       </property>
+      </item>
+     </widget>
+    </item>
     <item row="0" column="0">
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
@@ -75,31 +99,7 @@
       </item>
      </layout>
     </item>
-    <item row="0" column="1">
-     <widget class="QComboBox" name="comboBox">
-      <item>
-       <property name="text">
-        <string>ahmed</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>bedro</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>muhannad</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>ewees</string>
-       </property>
-      </item>
-     </widget>
-    </item>
-    <item row="1" column="0" colspan="2">
+    <item row="2" column="0" colspan="2">
      <layout class="QGridLayout" name="gridLayout">
       <item row="0" column="0">
        <widget class="QTableWidget" name="tableWidget"/>
@@ -108,6 +108,13 @@
        <widget class="QTableWidget" name="tableWidget_2"/>
       </item>
      </layout>
+    </item>
+    <item row="1" column="0">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>password</string>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>

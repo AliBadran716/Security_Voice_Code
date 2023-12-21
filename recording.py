@@ -31,11 +31,4 @@ class AudioRecorder:
         wf.writeframes(b''.join(self.frames))
         wf.close()
 
-# Example usage:
-recorder = AudioRecorder()
-recorder.start_recording()
 
-# ... wait for some time or until a stop button is pressed ...
-
-recorder.stop_recording()
-recorder.save_audio('output.wav')
