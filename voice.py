@@ -6,7 +6,7 @@ class Voice:
     def __init__(self , voice_path):
         sampling_rate , self.voice = scipy.io.wavfile.read(voice_path) 
         self.sampling_rate = sampling_rate
-        self.msr , self.mv = librosa.load(voice_path)
+        self.mv , self.msr = librosa.load(voice_path)
         self.compute_fourier_transform()
         
     
@@ -21,6 +21,9 @@ class Voice:
     def get_amplitude(self):
         return np.abs(self.fourier_transform)
     
+    def get_stft(self):
+        return np.abs(librosa.stft(self.mv))    
+
     def get_central_centroid(self):
         return np.sum(np.abs(self.frequencies) * self.get_amplitude()) / np.sum(self.get_amplitude())
     
@@ -31,7 +34,7 @@ class Voice:
 
         self.mv = np.array(self.mv)
         self.mv = self.mv.astype(float)
-        
+
 
         mfccs = librosa.feature.mfcc(y=self.mv, sr=self.msr, n_mfcc=40)
         delta_mfccs = librosa.feature.delta(mfccs)

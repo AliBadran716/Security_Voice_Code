@@ -79,12 +79,14 @@ class MainApp(QMainWindow, FORM_CLASS):
 
     
     def check_similarity(self, test_voice, password_voice):
-        features1 = test_voice.extract_features()
-        features2 = password_voice.extract_features()
-        # features1, features2 = self.match_signal_length(features1, features2)
+        features1 = test_voice.get_stft()
+        features2 = password_voice.get_stft()
+        features1, features2 = self.match_signal_length(features1, features2)
         
         # similarity_score = np.linalg.norm(features1 - features2)
-        similarity_score = np.dot(features1, features2) / (np.linalg.norm(features1) * np.linalg.norm(features2))
+        similarity_score = np.dot(features1.T, features2) / (np.linalg.norm(features1) * np.linalg.norm(features2))
+        print(similarity_score)
+        similarity_score = np.mean(similarity_score)
         return similarity_score
     
     def match_signal_length(self, signal1, signal2):
