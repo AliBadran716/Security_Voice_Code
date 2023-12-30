@@ -37,7 +37,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         self.handle_button()
         self.passwords = {
             "unlock_the_gate": ["unlock_the_gate.wav"    #wav file
-                                , None                   #similarity
+                                , None                   #similarity factor
                                 , None],                 #instance
             "open_middle_door": ["open_middle_door.wav" 
                                  , None 
@@ -79,9 +79,9 @@ class MainApp(QMainWindow, FORM_CLASS):
 
     
     def check_similarity(self, test_voice, password_voice):
-        features1 = test_voice.get_amplitude()
-        features2 = password_voice.get_amplitude()  
-        features1, features2 = self.match_signal_length(features1, features2)
+        features1 = test_voice.extract_features()
+        features2 = password_voice.extract_features()
+        # features1, features2 = self.match_signal_length(features1, features2)
         
         # similarity_score = np.linalg.norm(features1 - features2)
         similarity_score = np.dot(features1, features2) / (np.linalg.norm(features1) * np.linalg.norm(features2))
@@ -93,24 +93,28 @@ class MainApp(QMainWindow, FORM_CLASS):
         signal2 = np.pad(signal2, (0, max_length - len(signal2)), 'constant')
         return signal1, signal2
     
-    def spectrogram(self, data, sampling_rate,widget):
+
+    def spectrogram(self, data, sampling_rate, widget):
         if widget.layout() is not None:
-            print("Deleting layout")
+            
             widget.layout().deleteLater()
+        
         print("Spectrogram")
         data = np.frombuffer(b''.join(data), dtype=np.int16)
         print(data)
-        _, _, Sxx = spectrogram(data, sampling_rate)
-        time_axis = np.linspace(0, len(data) / sampling_rate, num=Sxx.shape[1])
         fig = Figure()
         fig = Figure(figsize=(2,3))
         ax = fig.add_subplot(111)
-        ax.imshow(10 * np.log10(Sxx), aspect='auto', cmap='viridis',extent=[time_axis[0], time_axis[-1], 0, sampling_rate / 2])
+        Sxx = ax.specgram(data, Fs=sampling_rate, cmap='plasma')
+        # time_axis = np.linspace(0, len(data) / sampling_rate, num=Sxx.shape[1])
+        
+        # ax.imshow(10 * np.log10(Sxx), aspect='auto', cmap='viridis',extent=[time_axis[0], time_axis[-1], 0, sampling_rate / 2])
         ax.axes.plot()
         canvas = FigureCanvas(fig)
         layout = QVBoxLayout()
         layout.addWidget(canvas)
         widget.setLayout(layout)
+        widget.show()
 
 def main():  # method to start app
     app = QApplication(sys.argv)
