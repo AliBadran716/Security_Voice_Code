@@ -38,22 +38,22 @@ class MainApp(QMainWindow, FORM_CLASS):
         self.handle_button()
         self.passwords = {
             "unlock_the_gate": [
-                ["voice_data_base/ahmed_ali_unlock_the_gate.wav", "voice_data_base/bedro_unlock_the_gate.wav"]
+                ["voice_data_base/ahmed_ali_unlock_the_gate.wav","voice_data_base/bedro_unlock_the_gate.wav", "voice_data_base/bedro_unlock_the_gate_1.wav", "voice_data_base/bedro_unlock_the_gate_2.wav", "voice_data_base/bedro_unlock_the_gate_3.wav"]
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
-                , [None, None]  # instance
+                , [None, None, None, None, None]  # instance
             ],
             "open_middle_door": [
-                ["voice_data_base/ahmed_ali_open_middle_door.wav", "voice_data_base/bedro_open_middle_door.wav"]
+                ["voice_data_base/ahmed_ali_open_middle_door.wav", "voice_data_base/bedro_open_middle_door.wav", "voice_data_base/bedro_open_middle_door_1.wav", "voice_data_base/bedro_open_middle_door_2.wav", "voice_data_base/bedro_open_middle_door_3.wav"]
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
-                , [None, None]  # instance
+                , [None, None, None, None, None]  # instance
             ],
             "grant_me_access": [
-                ["voice_data_base/ahmed_ali_grant_me_access.wav", "voice_data_base/bedro_grant_me_access.wav"]
+                ["voice_data_base/ahmed_ali_grant_me_access.wav", "voice_data_base/bedro_grant_me_access.wav", "voice_data_base/bedro_grant_me_access_1.wav", "voice_data_base/bedro_grant_me_access_2.wav", "voice_data_base/bedro_grant_me_access_3.wav"]
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
-                , [None, None]  # instance
+                , [None, None, None, None, None]  # instance
             ],
         }
 
@@ -93,20 +93,32 @@ class MainApp(QMainWindow, FORM_CLASS):
     def check_similarity(self, test_voice, password_voice):
         features1 = test_voice.get_stft()
         similarity_score = []
+        correlation = []
         for i in range(len(password_voice)):
             features2 = password_voice[i].get_stft()
             features1, features2 = self.match_signal_length(features1, features2)
 
             # similarity_score = np.linalg.norm(features1 - features2)
             similarity_score.append(np.mean(np.dot(features1.T, features2) / (np.linalg.norm(features1) * np.linalg.norm(features2))))
-        similarity_score = np.max(similarity_score)
-        print(similarity_score)
-        return similarity_score
+            # Compute Pearson correlation coefficient
+            correlation.append(np.corrcoef(features1.flatten(), features2.flatten())[0, 1])
+
+        similarity_score = np.mean(similarity_score) * 10000
+        correlation = np.mean(correlation) * 100
+
+        print('correlation', correlation)
+        print("similarity_score", similarity_score)
+        return correlation
 
     def match_signal_length(self, signal1, signal2):
-        max_length = max(len(signal1), len(signal2))
-        signal1 = np.pad(signal1, (0, max_length - len(signal1)), 'constant')
-        signal2 = np.pad(signal2, (0, max_length - len(signal2)), 'constant')
+        len1, len2 = signal1.shape[1], signal2.shape[1]
+        max_len = max(len1, len2)
+
+        if len1 < max_len:
+            signal1 = np.pad(signal1, ((0, 0), (0, max_len - len1)), 'constant')
+        elif len2 < max_len:
+            signal2 = np.pad(signal2, ((0, 0), (0, max_len - len2)), 'constant')
+
         return signal1, signal2
 
     def spectrogram(self, data, sampling_rate, widget):
