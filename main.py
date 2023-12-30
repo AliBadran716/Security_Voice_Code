@@ -81,7 +81,7 @@ class MainApp(QMainWindow, FORM_CLASS):
             test_voice = Voice('trial.wav')
 
             for password in self.passwords:
-                self.passwords[password][1] = self.check_similarity(test_voice, self.passwords[password][2])
+                self.passwords[password][1] = self.check_similarity(test_voice, self.passwords[password][2], password)
             max = 0
             for password in self.passwords:
                 if self.passwords[password][1] > max:
@@ -90,7 +90,7 @@ class MainApp(QMainWindow, FORM_CLASS):
 
             self.label.setText(max_password)
 
-    def check_similarity(self, test_voice, password_voice):
+    def check_similarity(self, test_voice, password_voice, keyword):
         features1 = test_voice.get_stft()
         similarity_score = []
         correlation = []
@@ -106,8 +106,11 @@ class MainApp(QMainWindow, FORM_CLASS):
         similarity_score = np.mean(similarity_score) * 10000
         correlation = np.mean(correlation) * 100
 
+        print(keyword)
         print('correlation', correlation)
         print("similarity_score", similarity_score)
+        print("")
+
         return correlation
 
     def match_signal_length(self, signal1, signal2):
