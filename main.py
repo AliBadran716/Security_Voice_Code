@@ -40,44 +40,56 @@ class MainApp(QMainWindow, FORM_CLASS):
         self.handle_button()
         self.passwords = {
             "unlock_the_gate": [
-                ["voice_data_base/ahmed_ali_unlock_the_gate.wav","voice_data_base/ahmed_ali_unlock_the_gate_1.wav", "voice_data_base/ahmed_ali_unlock_the_gate_2.wav", "voice_data_base/ahmed_ali_unlock_the_gate_3.wav","voice_data_base/bedro_unlock_the_gate.wav", "voice_data_base/bedro_unlock_the_gate_1.wav", "voice_data_base/bedro_unlock_the_gate_2.wav", "voice_data_base/bedro_unlock_the_gate_3.wav"]
+                ["voice_data_base/ahmed_ali_unlock_the_gate.wav", "voice_data_base/ahmed_ali_unlock_the_gate_1.wav",
+                 "voice_data_base/ahmed_ali_unlock_the_gate_2.wav", "voice_data_base/ahmed_ali_unlock_the_gate_3.wav",
+                 "voice_data_base/bedro_unlock_the_gate.wav", "voice_data_base/bedro_unlock_the_gate_1.wav",
+                 "voice_data_base/bedro_unlock_the_gate_2.wav", "voice_data_base/bedro_unlock_the_gate_3.wav"]
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
-                , [None, None, None, None, None,None, None, None]  # instance
+                , [None, None, None, None, None, None, None, None]  # instance
             ],
             "open_middle_door": [
-                ["voice_data_base/ahmed_ali_open_middle_door.wav","voice_data_base/ahmed_ali_open_middle_door_1.wav","voice_data_base/ahmed_ali_open_middle_door_2.wav","voice_data_base/ahmed_ali_open_middle_door_3.wav", "voice_data_base/bedro_open_middle_door.wav", "voice_data_base/bedro_open_middle_door_1.wav", "voice_data_base/bedro_open_middle_door_2.wav", "voice_data_base/bedro_open_middle_door_3.wav"]
+                ["voice_data_base/ahmed_ali_open_middle_door.wav", "voice_data_base/ahmed_ali_open_middle_door_1.wav",
+                 "voice_data_base/ahmed_ali_open_middle_door_2.wav", "voice_data_base/ahmed_ali_open_middle_door_3.wav",
+                 "voice_data_base/bedro_open_middle_door.wav", "voice_data_base/bedro_open_middle_door_1.wav",
+                 "voice_data_base/bedro_open_middle_door_2.wav", "voice_data_base/bedro_open_middle_door_3.wav"]
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
                 , [None, None, None, None, None, None, None, None]  # instance
             ],
             "grant_me_access": [
-                ["voice_data_base/ahmed_ali_grant_me_access.wav", "voice_data_base/bedro_grant_me_access.wav", "voice_data_base/bedro_grant_me_access_1.wav", "voice_data_base/bedro_grant_me_access_2.wav", "voice_data_base/bedro_grant_me_access_3.wav","voice_data_base/ahmed_ali_grant_me_access_1.wav","voice_data_base/ahmed_ali_grant_me_access_2.wav","voice_data_base/ahmed_ali_grant_me_access_3.wav"]
+                ["voice_data_base/ahmed_ali_grant_me_access.wav", "voice_data_base/bedro_grant_me_access.wav",
+                 "voice_data_base/bedro_grant_me_access_1.wav", "voice_data_base/bedro_grant_me_access_2.wav",
+                 "voice_data_base/bedro_grant_me_access_3.wav", "voice_data_base/ahmed_ali_grant_me_access_1.wav",
+                 "voice_data_base/ahmed_ali_grant_me_access_2.wav", "voice_data_base/ahmed_ali_grant_me_access_3.wav"]
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
-                , [None, None, None, None, None,None, None,None]  # instance
+                , [None, None, None, None, None, None, None, None]  # instance
             ],
         }
-        #voice
+        # voice
         self.voice = {
-            "ahmed_ali" :[ ["voice_data_base/ahmed_ali_unlock_the_gate.wav" , "voice_data_base/ahmed_ali_open_middle_door.wav", "voice_data_base/ahmed_ali_open_middle_door_1.wav","voice_data_base/ahmed_ali_open_middle_door_2.wav","voice_data_base/ahmed_ali_open_middle_door_3.wav", "voice_data_base/ahmed_ali_grant_me_access.wav"],
-            None, #similarity factor    
-            [None,None,None,None,None,None]
-            ],
-            "bedro" :[ ["voice_data_base/bedro_unlock_the_gate.wav" , "voice_data_base/bedro_open_middle_door_1.wav", "voice_data_base/bedro_open_middle_door_2.wav", "voice_data_base/bedro_open_middle_door_3.wav", "voice_data_base/bedro_open_middle_door.wav" , "voice_data_base/bedro_grant_me_access.wav"],
-            None, #similarity factor
-            [None,None,None,None,None,None]
-            ] 
+            "ahmed_ali": [
+                ["voice_data_base/ahmed_ali_unlock_the_gate.wav", "voice_data_base/ahmed_ali_unlock_the_gate_1.wav", "voice_data_base/ahmed_ali_unlock_the_gate_2.wav", "voice_data_base/ahmed_ali_unlock_the_gate_3.wav",
+                 "voice_data_base/ahmed_ali_open_middle_door.wav", "voice_data_base/ahmed_ali_open_middle_door_1.wav", "voice_data_base/ahmed_ali_open_middle_door_2.wav", "voice_data_base/ahmed_ali_open_middle_door_3.wav",
+                 "voice_data_base/ahmed_ali_grant_me_access.wav", "voice_data_base/ahmed_ali_grant_me_access_1.wav", "voice_data_base/ahmed_ali_grant_me_access_2.wav", "voice_data_base/ahmed_ali_grant_me_access_3.wav"],
+                None,  # similarity factor
+                [None, None, None, None, None, None, None, None, None, None, None, None]
+                ],
+            "bedro": [["voice_data_base/bedro_unlock_the_gate.wav", "voice_data_base/bedro_unlock_the_gate_1.wav", "voice_data_base/bedro_unlock_the_gate_2.wav", "voice_data_base/bedro_unlock_the_gate_3.wav",
+                       "voice_data_base/bedro_open_middle_door.wav", "voice_data_base/bedro_open_middle_door_1.wav", "voice_data_base/bedro_open_middle_door_2.wav", "voice_data_base/bedro_open_middle_door_3.wav",
+                       "voice_data_base/bedro_grant_me_access.wav", "voice_data_base/bedro_grant_me_access_1.wav", "voice_data_base/bedro_grant_me_access_2.wav", "voice_data_base/bedro_grant_me_access_3.wav"],
+                      None,  # similarity factor
+                      [None, None, None, None, None, None, None, None, None, None, None, None]
+                      ]
             # "muhannad":[["voice_data_base/muhannad_unlock_the_gate.wav" , "voice_data_base/muhannad_open_middle_door.wav" , "voice_data_base/muhannad_grant_me_access.wav"],
             # None, #similarity factor
             # [None,None,None]
             # ]
-            
-            
+
         }
 
         self.create_password_audio_instance()  # create instance of each password
-        self.create_voice_audio_instance()  # create instance of each voice
 
     def handle_button(self):
         self.pushButton.clicked.connect(self.start_recording)
@@ -86,10 +98,11 @@ class MainApp(QMainWindow, FORM_CLASS):
         for password in (self.passwords.keys()):
             for i in range(len(self.passwords[password][0])):
                 self.passwords[password][2][i] = Voice(self.passwords[password][0][i])
-    def create_voice_audio_instance(self):
+
         for voice in (self.voice.keys()):
             for i in range(len(self.voice[voice][0])):
                 self.voice[voice][2][i] = Voice(self.voice[voice][0][i])
+
     def start_recording(self):
         print("Start Recording")
         if (self.pushButton.text() == "Start"):
@@ -119,6 +132,7 @@ class MainApp(QMainWindow, FORM_CLASS):
 
             self.label.setText(max_password)
             print(max_voice_1)
+
     def check_similarity(self, test_voice, password_voice, keyword):
         features1 = test_voice.get_stft()
         similarity_score = []
@@ -130,7 +144,8 @@ class MainApp(QMainWindow, FORM_CLASS):
             features1, features2 = self.match_signal_length(features1, features2)
 
             # similarity_score = np.linalg.norm(features1 - features2)
-            similarity_score.append(np.mean(np.dot(features1.T, features2) / (np.linalg.norm(features1) * np.linalg.norm(features2))))
+            similarity_score.append(
+                np.mean(np.dot(features1.T, features2) / (np.linalg.norm(features1) * np.linalg.norm(features2))))
             # Compute Pearson correlation coefficient
             correlation.append(np.corrcoef(features1.flatten(), features2.flatten())[0, 1])
             # Compute convolution
@@ -147,6 +162,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         print("")
 
         return correlation
+
     def check_voice_similarity(self, test_voice, password_voice, keyword):
         features1 = test_voice.extract_features()
         similarity_score = []
@@ -156,7 +172,8 @@ class MainApp(QMainWindow, FORM_CLASS):
             features1, features2 = self.match_signal_length(features1, features2)
 
             # similarity_score = np.linalg.norm(features1 - features2)
-            similarity_score.append(np.mean(np.dot(features1.T, features2) / (np.linalg.norm(features1) * np.linalg.norm(features2))))
+            similarity_score.append(
+                np.mean(np.dot(features1.T, features2) / (np.linalg.norm(features1) * np.linalg.norm(features2))))
             # Compute Pearson correlation coefficient
             correlation.append(np.corrcoef(features1.flatten(), features2.flatten())[0, 1])
         similarity_score = np.mean(similarity_score) * 10000
@@ -166,6 +183,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         print("similarity_score", similarity_score)
         print("")
         return correlation
+
     def match_signal_length(self, signal1, signal2):
         len1, len2 = signal1.shape[1], signal2.shape[1]
         max_len = max(len1, len2)
