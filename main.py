@@ -43,28 +43,35 @@ class MainApp(QMainWindow, FORM_CLASS):
                 ["voice_data_base/ahmed_ali_unlock_the_gate.wav", "voice_data_base/ahmed_ali_unlock_the_gate_1.wav",
                  "voice_data_base/ahmed_ali_unlock_the_gate_2.wav", "voice_data_base/ahmed_ali_unlock_the_gate_3.wav",
                  "voice_data_base/bedro_unlock_the_gate.wav", "voice_data_base/bedro_unlock_the_gate_1.wav",
-                 "voice_data_base/bedro_unlock_the_gate_2.wav", "voice_data_base/bedro_unlock_the_gate_3.wav"]
+                 "voice_data_base/bedro_unlock_the_gate_2.wav", "voice_data_base/bedro_unlock_the_gate_3.wav",
+                 "voice_data_base/hassan_unlock_the_gate.wav", "voice_data_base/hassan_unlock_the_gate_1.wav",
+                 "voice_data_base/hassan_unlock_the_gate_2.wav", "voice_data_base/hassan_unlock_the_gate_3.wav"]
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
-                , [None, None, None, None, None, None, None, None]  # instance
+                , [None, None, None, None, None, None, None, None ,None,None,None,None]  # instance
             ],
             "open_middle_door": [
                 ["voice_data_base/ahmed_ali_open_middle_door.wav", "voice_data_base/ahmed_ali_open_middle_door_1.wav",
                  "voice_data_base/ahmed_ali_open_middle_door_2.wav", "voice_data_base/ahmed_ali_open_middle_door_3.wav",
                  "voice_data_base/bedro_open_middle_door.wav", "voice_data_base/bedro_open_middle_door_1.wav",
-                 "voice_data_base/bedro_open_middle_door_2.wav", "voice_data_base/bedro_open_middle_door_3.wav"]
+                 "voice_data_base/bedro_open_middle_door_2.wav", "voice_data_base/bedro_open_middle_door_3.wav",
+                 "voice_data_base/hassan_open_middle_door.wav", "voice_data_base/hassan_open_middle_door_1.wav",
+                 "voice_data_base/hassan_open_middle_door_2.wav", "voice_data_base/hassan_open_middle_door_3.wav"]
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
-                , [None, None, None, None, None, None, None, None]  # instance
+                , [None, None, None, None, None, None, None, None,None,None,None, None]  # instance
             ],
             "grant_me_access": [
                 ["voice_data_base/ahmed_ali_grant_me_access.wav", "voice_data_base/bedro_grant_me_access.wav",
                  "voice_data_base/bedro_grant_me_access_1.wav", "voice_data_base/bedro_grant_me_access_2.wav",
                  "voice_data_base/bedro_grant_me_access_3.wav", "voice_data_base/ahmed_ali_grant_me_access_1.wav",
-                 "voice_data_base/ahmed_ali_grant_me_access_2.wav", "voice_data_base/ahmed_ali_grant_me_access_3.wav"]
+                 "voice_data_base/ahmed_ali_grant_me_access_2.wav", "voice_data_base/ahmed_ali_grant_me_access_3.wav",
+                 "voice_data_base/hassan_grant_me_access.wav", "voice_data_base/hassan_grant_me_access_1.wav",
+                "voice_data_base/hassan_grant_me_access_2.wav", "voice_data_base/hassan_grant_me_access_3.wav"
+                 ]
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
-                , [None, None, None, None, None, None, None, None]  # instance
+                , [None, None, None, None, None, None, None, None,None,None,None,None]  # instance
             ],
         }
         # voice
@@ -81,12 +88,17 @@ class MainApp(QMainWindow, FORM_CLASS):
                        "voice_data_base/bedro_grant_me_access.wav", "voice_data_base/bedro_grant_me_access_1.wav", "voice_data_base/bedro_grant_me_access_2.wav", "voice_data_base/bedro_grant_me_access_3.wav"],
                       None,  # similarity factor
                       [None, None, None, None, None, None, None, None, None, None, None, None]
-                      ]
+                      ],
             # "muhannad":[["voice_data_base/muhannad_unlock_the_gate.wav" , "voice_data_base/muhannad_open_middle_door.wav" , "voice_data_base/muhannad_grant_me_access.wav"],
             # None, #similarity factor
             # [None,None,None]
             # ]
-
+            "hassan": [["voice_data_base/hassan_unlock_the_gate.wav", "voice_data_base/hassan_unlock_the_gate_1.wav", "voice_data_base/hassan_unlock_the_gate_2.wav", "voice_data_base/hassan_unlock_the_gate_3.wav",
+                       "voice_data_base/hassan_open_middle_door.wav", "voice_data_base/hassan_open_middle_door_1.wav", "voice_data_base/hassan_open_middle_door_2.wav", "voice_data_base/hassan_open_middle_door_3.wav",
+                       "voice_data_base/hassan_grant_me_access.wav", "voice_data_base/hassan_grant_me_access_1.wav", "voice_data_base/hassan_grant_me_access_2.wav", "voice_data_base/hassan_grant_me_access_3.wav"],
+                      None,  # similarity factor
+                      [None, None, None, None, None, None, None, None, None, None, None, None]
+                      ]
         }
 
         self.create_password_audio_instance()  # create instance of each password
