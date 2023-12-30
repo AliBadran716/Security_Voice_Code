@@ -58,6 +58,7 @@ class MainApp(QMainWindow, FORM_CLASS):
                 , [None, None, None, None, None,None, None,None]  # instance
             ],
         }
+        #voice
         self.voice = {
             "ahmed_ali" :[ ["voice_data_base/ahmed_ali_unlock_the_gate.wav" , "voice_data_base/ahmed_ali_open_middle_door.wav", "voice_data_base/ahmed_ali_open_middle_door_1.wav","voice_data_base/ahmed_ali_open_middle_door_2.wav","voice_data_base/ahmed_ali_open_middle_door_3.wav", "voice_data_base/ahmed_ali_grant_me_access.wav"],
             None, #similarity factor    
