@@ -1,32 +1,15 @@
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtGui import QPixmap
-from PyQt5.uic import loadUiType
-import pyqtgraph as pg
-# import cv2
-import numpy as np
-import pandas as pd
-import os
 import sys
 from os import path
-import wave
-import threading
-import pyaudio
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QFileDialog
-from recording import AudioRecorder
-from scipy.signal import spectrogram
-from scipy.signal import convolve2d
 
+import numpy as np
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout
+from PyQt5.uic import loadUiType
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from matplotlib import pyplot as plt
+from scipy.signal import convolve2d
+
+from recording import AudioRecorder
 from voice import Voice
-
-# from matplotlib import MatplotlibWidget
-
 
 FORM_CLASS, _ = loadUiType(
     path.join(path.dirname(__file__), "main.ui")
@@ -48,7 +31,7 @@ class MainApp(QMainWindow, FORM_CLASS):
                  "voice_data_base/hassan_unlock_the_gate_2.wav", "voice_data_base/hassan_unlock_the_gate_3.wav"]
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
-                , [None, None, None, None, None, None, None, None ,None,None,None,None]  # instance
+                , [None, None, None, None, None, None, None, None, None, None, None, None]  # instance
             ],
             "open_middle_door": [
                 ["voice_data_base/ahmed_ali_open_middle_door.wav", "voice_data_base/ahmed_ali_open_middle_door_1.wav",
@@ -59,7 +42,7 @@ class MainApp(QMainWindow, FORM_CLASS):
                  "voice_data_base/hassan_open_middle_door_2.wav", "voice_data_base/hassan_open_middle_door_3.wav"]
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
-                , [None, None, None, None, None, None, None, None,None,None,None, None]  # instance
+                , [None, None, None, None, None, None, None, None, None, None, None, None]  # instance
             ],
             "grant_me_access": [
                 ["voice_data_base/ahmed_ali_grant_me_access.wav", "voice_data_base/bedro_grant_me_access.wav",
@@ -67,25 +50,31 @@ class MainApp(QMainWindow, FORM_CLASS):
                  "voice_data_base/bedro_grant_me_access_3.wav", "voice_data_base/ahmed_ali_grant_me_access_1.wav",
                  "voice_data_base/ahmed_ali_grant_me_access_2.wav", "voice_data_base/ahmed_ali_grant_me_access_3.wav",
                  "voice_data_base/hassan_grant_me_access.wav", "voice_data_base/hassan_grant_me_access_1.wav",
-                "voice_data_base/hassan_grant_me_access_2.wav", "voice_data_base/hassan_grant_me_access_3.wav"
+                 "voice_data_base/hassan_grant_me_access_2.wav", "voice_data_base/hassan_grant_me_access_3.wav"
                  ]
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
-                , [None, None, None, None, None, None, None, None,None,None,None,None]  # instance
+                , [None, None, None, None, None, None, None, None, None, None, None, None]  # instance
             ],
         }
         # voice
         self.voice = {
             "ahmed_ali": [
-                ["voice_data_base/ahmed_ali_unlock_the_gate.wav", "voice_data_base/ahmed_ali_unlock_the_gate_1.wav", "voice_data_base/ahmed_ali_unlock_the_gate_2.wav", "voice_data_base/ahmed_ali_unlock_the_gate_3.wav",
-                 "voice_data_base/ahmed_ali_open_middle_door.wav", "voice_data_base/ahmed_ali_open_middle_door_1.wav", "voice_data_base/ahmed_ali_open_middle_door_2.wav", "voice_data_base/ahmed_ali_open_middle_door_3.wav",
-                 "voice_data_base/ahmed_ali_grant_me_access.wav", "voice_data_base/ahmed_ali_grant_me_access_1.wav", "voice_data_base/ahmed_ali_grant_me_access_2.wav", "voice_data_base/ahmed_ali_grant_me_access_3.wav"],
+                ["voice_data_base/ahmed_ali_unlock_the_gate.wav", "voice_data_base/ahmed_ali_unlock_the_gate_1.wav",
+                 "voice_data_base/ahmed_ali_unlock_the_gate_2.wav", "voice_data_base/ahmed_ali_unlock_the_gate_3.wav",
+                 "voice_data_base/ahmed_ali_open_middle_door.wav", "voice_data_base/ahmed_ali_open_middle_door_1.wav",
+                 "voice_data_base/ahmed_ali_open_middle_door_2.wav", "voice_data_base/ahmed_ali_open_middle_door_3.wav",
+                 "voice_data_base/ahmed_ali_grant_me_access.wav", "voice_data_base/ahmed_ali_grant_me_access_1.wav",
+                 "voice_data_base/ahmed_ali_grant_me_access_2.wav", "voice_data_base/ahmed_ali_grant_me_access_3.wav"],
                 None,  # similarity factor
                 [None, None, None, None, None, None, None, None, None, None, None, None]
-                ],
-            "bedro": [["voice_data_base/bedro_unlock_the_gate.wav", "voice_data_base/bedro_unlock_the_gate_1.wav", "voice_data_base/bedro_unlock_the_gate_2.wav", "voice_data_base/bedro_unlock_the_gate_3.wav",
-                       "voice_data_base/bedro_open_middle_door.wav", "voice_data_base/bedro_open_middle_door_1.wav", "voice_data_base/bedro_open_middle_door_2.wav", "voice_data_base/bedro_open_middle_door_3.wav",
-                       "voice_data_base/bedro_grant_me_access.wav", "voice_data_base/bedro_grant_me_access_1.wav", "voice_data_base/bedro_grant_me_access_2.wav", "voice_data_base/bedro_grant_me_access_3.wav"],
+            ],
+            "bedro": [["voice_data_base/bedro_unlock_the_gate.wav", "voice_data_base/bedro_unlock_the_gate_1.wav",
+                       "voice_data_base/bedro_unlock_the_gate_2.wav", "voice_data_base/bedro_unlock_the_gate_3.wav",
+                       "voice_data_base/bedro_open_middle_door.wav", "voice_data_base/bedro_open_middle_door_1.wav",
+                       "voice_data_base/bedro_open_middle_door_2.wav", "voice_data_base/bedro_open_middle_door_3.wav",
+                       "voice_data_base/bedro_grant_me_access.wav", "voice_data_base/bedro_grant_me_access_1.wav",
+                       "voice_data_base/bedro_grant_me_access_2.wav", "voice_data_base/bedro_grant_me_access_3.wav"],
                       None,  # similarity factor
                       [None, None, None, None, None, None, None, None, None, None, None, None]
                       ],
@@ -93,12 +82,16 @@ class MainApp(QMainWindow, FORM_CLASS):
             # None, #similarity factor
             # [None,None,None]
             # ]
-            "hassan": [["voice_data_base/hassan_unlock_the_gate.wav", "voice_data_base/hassan_unlock_the_gate_1.wav", "voice_data_base/hassan_unlock_the_gate_2.wav", "voice_data_base/hassan_unlock_the_gate_3.wav",
-                       "voice_data_base/hassan_open_middle_door.wav", "voice_data_base/hassan_open_middle_door_1.wav", "voice_data_base/hassan_open_middle_door_2.wav", "voice_data_base/hassan_open_middle_door_3.wav",
-                       "voice_data_base/hassan_grant_me_access.wav", "voice_data_base/hassan_grant_me_access_1.wav", "voice_data_base/hassan_grant_me_access_2.wav", "voice_data_base/hassan_grant_me_access_3.wav"],
-                      None,  # similarity factor
-                      [None, None, None, None, None, None, None, None, None, None, None, None]
-                      ]
+            "hassan": [["voice_data_base/hassan_unlock_the_gate.wav", "voice_data_base/hassan_unlock_the_gate_1.wav",
+                        "voice_data_base/hassan_unlock_the_gate_2.wav", "voice_data_base/hassan_unlock_the_gate_3.wav",
+                        "voice_data_base/hassan_open_middle_door.wav", "voice_data_base/hassan_open_middle_door_1.wav",
+                        "voice_data_base/hassan_open_middle_door_2.wav",
+                        "voice_data_base/hassan_open_middle_door_3.wav",
+                        "voice_data_base/hassan_grant_me_access.wav", "voice_data_base/hassan_grant_me_access_1.wav",
+                        "voice_data_base/hassan_grant_me_access_2.wav", "voice_data_base/hassan_grant_me_access_3.wav"],
+                       None,  # similarity factor
+                       [None, None, None, None, None, None, None, None, None, None, None, None]
+                       ]
         }
 
         self.create_password_audio_instance()  # create instance of each password
@@ -130,7 +123,8 @@ class MainApp(QMainWindow, FORM_CLASS):
             for voice in self.voice:
                 self.voice[voice][1] = self.check_similarity(test_voice, self.voice[voice][2], voice, False)
             for password in self.passwords:
-                self.passwords[password][1] = self.check_similarity(test_voice, self.passwords[password][2], password, True)
+                self.passwords[password][1] = self.check_similarity(test_voice, self.passwords[password][2], password,
+                                                                    True)
             max = 0
             max_voice = 0
             for password in self.passwords:
