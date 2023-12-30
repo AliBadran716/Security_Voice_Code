@@ -18,6 +18,8 @@ import pyaudio
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QFileDialog
 from recording import AudioRecorder
 from scipy.signal import spectrogram
+from scipy.signal import convolve2d
+
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib import pyplot as plt
@@ -94,6 +96,8 @@ class MainApp(QMainWindow, FORM_CLASS):
         features1 = test_voice.get_stft()
         similarity_score = []
         correlation = []
+        convulotion = []
+
         for i in range(len(password_voice)):
             features2 = password_voice[i].get_stft()
             features1, features2 = self.match_signal_length(features1, features2)
@@ -102,13 +106,17 @@ class MainApp(QMainWindow, FORM_CLASS):
             similarity_score.append(np.mean(np.dot(features1.T, features2) / (np.linalg.norm(features1) * np.linalg.norm(features2))))
             # Compute Pearson correlation coefficient
             correlation.append(np.corrcoef(features1.flatten(), features2.flatten())[0, 1])
+            # Compute convolution
+            convulotion.append(convolve2d(features1, features2, mode='valid'))
 
         similarity_score = np.mean(similarity_score) * 10000
         correlation = np.mean(correlation) * 100
+        convulotion = np.mean(convulotion)
 
         print(keyword)
         print('correlation', correlation)
         print("similarity_score", similarity_score)
+        print("convulotion", convulotion)
         print("")
 
         return correlation
