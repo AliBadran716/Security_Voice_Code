@@ -116,9 +116,9 @@ class MainApp(QMainWindow, FORM_CLASS):
             self.recorder.save_audio('trial.wav')
             test_voice = Voice('trial.wav')
             for voice in self.voice:
-                self.voice[voice][1] = self.check_voice_similarity(test_voice, self.voice[voice][2], voice)
+                self.voice[voice][1] = self.check_similarity(test_voice, self.voice[voice][2], voice, False)
             for password in self.passwords:
-                self.passwords[password][1] = self.check_similarity(test_voice, self.passwords[password][2], password)
+                self.passwords[password][1] = self.check_similarity(test_voice, self.passwords[password][2], password, True)
             max = 0
             max_voice = 0
             for password in self.passwords:
@@ -133,14 +133,19 @@ class MainApp(QMainWindow, FORM_CLASS):
             self.label.setText(max_password)
             print(max_voice_1)
 
-    def check_similarity(self, test_voice, password_voice, keyword):
-        features1 = test_voice.get_stft()
+    def check_similarity(self, test_voice, password_voice, keyword, word=True):
         similarity_score = []
         correlation = []
         convulotion = []
 
         for i in range(len(password_voice)):
-            features2 = password_voice[i].get_stft()
+            if word:
+                features1 = test_voice.get_stft()
+                features2 = password_voice[i].get_stft()
+            else:
+                features1 = test_voice.extract_features()
+                features2 = password_voice[i].extract_features()
+
             features1, features2 = self.match_signal_length(features1, features2)
 
             # similarity_score = np.linalg.norm(features1 - features2)
@@ -161,27 +166,6 @@ class MainApp(QMainWindow, FORM_CLASS):
         print("convulotion", convulotion)
         print("")
 
-        return correlation
-
-    def check_voice_similarity(self, test_voice, password_voice, keyword):
-        features1 = test_voice.extract_features()
-        similarity_score = []
-        correlation = []
-        for i in range(len(password_voice)):
-            features2 = password_voice[i].extract_features()
-            features1, features2 = self.match_signal_length(features1, features2)
-
-            # similarity_score = np.linalg.norm(features1 - features2)
-            similarity_score.append(
-                np.mean(np.dot(features1.T, features2) / (np.linalg.norm(features1) * np.linalg.norm(features2))))
-            # Compute Pearson correlation coefficient
-            correlation.append(np.corrcoef(features1.flatten(), features2.flatten())[0, 1])
-        similarity_score = np.mean(similarity_score) * 10000
-        correlation = np.mean(correlation) * 100
-        print(keyword)
-        print('correlation', correlation)
-        print("similarity_score", similarity_score)
-        print("")
         return correlation
 
     def match_signal_length(self, signal1, signal2):
