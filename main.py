@@ -1,6 +1,7 @@
 import sys
 from os import path
 
+import functools
 import numpy as np
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout
 from PyQt5.uic import loadUiType
@@ -21,6 +22,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         super(MainApp, self).__init__(parent)
         self.setupUi(self)
         self.handle_button()
+        self.recorder = AudioRecorder()
         self.passwords = {
             "unlock_the_gate": [
                 ["voice_data_base/ahmed_ali_unlock_the_gate.wav", "voice_data_base/ahmed_ali_unlock_the_gate_1.wav",
@@ -33,6 +35,7 @@ class MainApp(QMainWindow, FORM_CLASS):
                 , None  # similarity factor
                 , [None, None, None, None, None, None, None, None, None, None, None, None]  # instance
                 , True  # Have access
+                , 20  # acceptable similarity factor
             ],
             "open_middle_door": [
                 ["voice_data_base/ahmed_ali_open_middle_door.wav", "voice_data_base/ahmed_ali_open_middle_door_1.wav",
@@ -45,6 +48,7 @@ class MainApp(QMainWindow, FORM_CLASS):
                 , None  # similarity factor
                 , [None, None, None, None, None, None, None, None, None, None, None, None]  # instance
                 , True  # Have access
+                , 12  # acceptable similarity factor
             ],
             "grant_me_access": [
                 ["voice_data_base/ahmed_ali_grant_me_access.wav", "voice_data_base/bedro_grant_me_access.wav",
@@ -58,6 +62,7 @@ class MainApp(QMainWindow, FORM_CLASS):
                 , None  # similarity factor
                 , [None, None, None, None, None, None, None, None, None, None, None, None]  # instance
                 , True  # Have access
+                , 11  # acceptable similarity factor
             ],
         }
         # voice
@@ -71,7 +76,8 @@ class MainApp(QMainWindow, FORM_CLASS):
                  "voice_data_base/ahmed_ali_grant_me_access_2.wav", "voice_data_base/ahmed_ali_grant_me_access_3.wav"],
                 None,  # similarity factor
                 [None, None, None, None, None, None, None, None, None, None, None, None],
-                True  # Have access
+                True,  # Have access
+                50  # acceptable similarity factor
             ],
             "bedro": [["voice_data_base/bedro_unlock_the_gate.wav", "voice_data_base/bedro_unlock_the_gate_1.wav",
                        "voice_data_base/bedro_unlock_the_gate_2.wav", "voice_data_base/bedro_unlock_the_gate_3.wav",
@@ -81,7 +87,8 @@ class MainApp(QMainWindow, FORM_CLASS):
                        "voice_data_base/bedro_grant_me_access_2.wav", "voice_data_base/bedro_grant_me_access_3.wav"],
                       None,  # similarity factor
                       [None, None, None, None, None, None, None, None, None, None, None, None],
-                      True  # Have access
+                      True,  # Have access
+                      80  # acceptable similarity factor
                       ],
 
             # "muhannad":[["voice_data_base/muhannad_unlock_the_gate.wav" , "voice_data_base/muhannad_open_middle_door.wav" , "voice_data_base/muhannad_grant_me_access.wav"],
@@ -98,14 +105,32 @@ class MainApp(QMainWindow, FORM_CLASS):
                         "voice_data_base/hassan_grant_me_access_2.wav", "voice_data_base/hassan_grant_me_access_3.wav"],
                        None,  # similarity factor
                        [None, None, None, None, None, None, None, None, None, None, None, None],
-                       True  # Have access
+                       True,  # Have access
+                       50  # acceptable similarity factor
                        ]
         }
 
         self.create_password_audio_instance()  # create instance of each password
 
     def handle_button(self):
-        self.pushButton.clicked.connect(self.start_recording)
+        self.record_btn.clicked.connect(self.start_recording)
+        # connect combox box word_access_i from 1 to 3 to the function change_word_access
+        for i in range(1, 4):
+            getattr(self, 'word_access_' + str(i)).clicked.connect(self.change_word_access)
+
+        # connect combox box person_access_i from 1 to 4 to the function change_voice_access
+        for i in range(1, 5):
+            getattr(self, 'person_access_' + str(i)).clicked.connect(self.change_word_access)
+
+    def change_word_access(self):
+        # change the access of the word
+        for i, password in enumerate(self.passwords):
+            is_checked = getattr(self, 'word_access_' + str(i + 1)).isChecked()
+            self.passwords[password][3] = is_checked
+
+        for i, voice in enumerate(self.voice):
+            is_checked = getattr(self, 'person_access_' + str(i + 1)).isChecked()
+            self.voice[voice][3] = is_checked
 
     def create_password_audio_instance(self):
         for password in (self.passwords.keys()):
@@ -117,13 +142,14 @@ class MainApp(QMainWindow, FORM_CLASS):
                 self.voice[voice][2][i] = Voice(self.voice[voice][0][i])
 
     def start_recording(self):
-        print("Start Recording")
-        if (self.pushButton.text() == "Start"):
-            self.pushButton.setText("Stop")
+        if (self.record_btn.text() == "Start"):
+            print("Start Recording")
+            self.record_btn.setText("Stop")
             self.recorder = AudioRecorder()
             self.recorder.start_recording()
         else:
-            self.pushButton.setText("Start")
+            print("Stop Recording")
+            self.record_btn.setText("Start")
             self.recorder.stop_recording()
             self.spectrogram(self.recorder.frames, 44100, self.widget)
             self.recorder.save_audio('trial.wav')
@@ -136,26 +162,38 @@ class MainApp(QMainWindow, FORM_CLASS):
             max_similarity = 0
             max_voice = 0
             Access = ""
-            for password in self.passwords:
+
+            for i, password in enumerate(self.passwords):
+                # set word_perc_i and word_bar_i from 1 to 3 to the similarity factor percentage to two decimal places
+                factor_percentage = round(self.passwords[password][1], 2)
+                getattr(self, 'word_perc_' + str(i + 1)).setText(str(factor_percentage))
+                getattr(self, 'word_bar_' + str(i + 1)).setValue(int(factor_percentage))
+
                 if self.passwords[password][1] > max_similarity:
                     max_similarity = self.passwords[password][1]
                     similar_word = password
-            for voice in self.voice:
+                    if max_similarity < self.passwords[similar_word][4] or not self.passwords[similar_word][3]:
+                        Access = "Access Denied"
+                    else:
+                        Access = "Access Granted"
+
+            for i, voice in enumerate(self.voice):
+                # set person_perc_i and person_bar_i from 1 to 4 to the similarity factor percentage
+                factor_percentage = round(self.voice[voice][1], 2)
+                getattr(self, 'person_perc_' + str(i + 1)).setText(str(factor_percentage))
+                getattr(self, 'person_bar_' + str(i + 1)).setValue(int(factor_percentage))
+
                 if self.voice[voice][1] > max_voice:
                     max_voice = self.voice[voice][1]
                     similar_person = voice
-
-            if max_similarity < 80 or self.passwords[similar_word][3] == False:
-                Access = "Access Denied"
-            else:
-                Access = "Access Granted"
-            if max_voice < 80 or self.voice[similar_person][3] == False:
-                Access = "Access Denied"
-            else:
-                Access = "Access Granted"
+                    if max_voice <  self.voice[similar_person][4] or not self.voice[similar_person][3]:
+                        Access = "Access Denied"
+                    else:
+                        Access = "Access Granted"
 
             self.label.setText(similar_word)
-            print(similar_person)
+            self.label_2.setText(similar_person)
+            self.access_label.setText(Access)
 
     def check_similarity(self, test_voice, password_voice, keyword, word=True):
         similarity_score = []
