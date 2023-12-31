@@ -32,6 +32,7 @@ class MainApp(QMainWindow, FORM_CLASS):
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
                 , [None, None, None, None, None, None, None, None, None, None, None, None]  # instance
+                , True  # Have access
             ],
             "open_middle_door": [
                 ["voice_data_base/ahmed_ali_open_middle_door.wav", "voice_data_base/ahmed_ali_open_middle_door_1.wav",
@@ -43,6 +44,7 @@ class MainApp(QMainWindow, FORM_CLASS):
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
                 , [None, None, None, None, None, None, None, None, None, None, None, None]  # instance
+                , True  # Have access
             ],
             "grant_me_access": [
                 ["voice_data_base/ahmed_ali_grant_me_access.wav", "voice_data_base/bedro_grant_me_access.wav",
@@ -55,6 +57,7 @@ class MainApp(QMainWindow, FORM_CLASS):
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
                 , [None, None, None, None, None, None, None, None, None, None, None, None]  # instance
+                , True  # Have access
             ],
         }
         # voice
@@ -67,7 +70,8 @@ class MainApp(QMainWindow, FORM_CLASS):
                  "voice_data_base/ahmed_ali_grant_me_access.wav", "voice_data_base/ahmed_ali_grant_me_access_1.wav",
                  "voice_data_base/ahmed_ali_grant_me_access_2.wav", "voice_data_base/ahmed_ali_grant_me_access_3.wav"],
                 None,  # similarity factor
-                [None, None, None, None, None, None, None, None, None, None, None, None]
+                [None, None, None, None, None, None, None, None, None, None, None, None],
+                True  # Have access
             ],
             "bedro": [["voice_data_base/bedro_unlock_the_gate.wav", "voice_data_base/bedro_unlock_the_gate_1.wav",
                        "voice_data_base/bedro_unlock_the_gate_2.wav", "voice_data_base/bedro_unlock_the_gate_3.wav",
@@ -76,12 +80,15 @@ class MainApp(QMainWindow, FORM_CLASS):
                        "voice_data_base/bedro_grant_me_access.wav", "voice_data_base/bedro_grant_me_access_1.wav",
                        "voice_data_base/bedro_grant_me_access_2.wav", "voice_data_base/bedro_grant_me_access_3.wav"],
                       None,  # similarity factor
-                      [None, None, None, None, None, None, None, None, None, None, None, None]
+                      [None, None, None, None, None, None, None, None, None, None, None, None],
+                      True  # Have access
                       ],
+
             # "muhannad":[["voice_data_base/muhannad_unlock_the_gate.wav" , "voice_data_base/muhannad_open_middle_door.wav" , "voice_data_base/muhannad_grant_me_access.wav"],
             # None, #similarity factor
             # [None,None,None]
             # ]
+
             "hassan": [["voice_data_base/hassan_unlock_the_gate.wav", "voice_data_base/hassan_unlock_the_gate_1.wav",
                         "voice_data_base/hassan_unlock_the_gate_2.wav", "voice_data_base/hassan_unlock_the_gate_3.wav",
                         "voice_data_base/hassan_open_middle_door.wav", "voice_data_base/hassan_open_middle_door_1.wav",
@@ -90,7 +97,8 @@ class MainApp(QMainWindow, FORM_CLASS):
                         "voice_data_base/hassan_grant_me_access.wav", "voice_data_base/hassan_grant_me_access_1.wav",
                         "voice_data_base/hassan_grant_me_access_2.wav", "voice_data_base/hassan_grant_me_access_3.wav"],
                        None,  # similarity factor
-                       [None, None, None, None, None, None, None, None, None, None, None, None]
+                       [None, None, None, None, None, None, None, None, None, None, None, None],
+                       True  # Have access
                        ]
         }
 
@@ -125,19 +133,29 @@ class MainApp(QMainWindow, FORM_CLASS):
             for password in self.passwords:
                 self.passwords[password][1] = self.check_similarity(test_voice, self.passwords[password][2], password,
                                                                     True)
-            max = 0
+            max_similarity = 0
             max_voice = 0
+            Access = ""
             for password in self.passwords:
-                if self.passwords[password][1] > max:
-                    max = self.passwords[password][1]
-                    max_password = password
+                if self.passwords[password][1] > max_similarity:
+                    max_similarity = self.passwords[password][1]
+                    similar_word = password
             for voice in self.voice:
                 if self.voice[voice][1] > max_voice:
                     max_voice = self.voice[voice][1]
-                    max_voice_1 = voice
+                    similar_person = voice
 
-            self.label.setText(max_password)
-            print(max_voice_1)
+            if max_similarity < 80 or self.passwords[similar_word][3] == False:
+                Access = "Access Denied"
+            else:
+                Access = "Access Granted"
+            if max_voice < 80 or self.voice[similar_person][3] == False:
+                Access = "Access Denied"
+            else:
+                Access = "Access Granted"
+
+            self.label.setText(similar_word)
+            print(similar_person)
 
     def check_similarity(self, test_voice, password_voice, keyword, word=True):
         similarity_score = []
