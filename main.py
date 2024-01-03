@@ -1,6 +1,6 @@
 import sys
 from os import path
-
+import statistics
 import functools
 import numpy as np
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout
@@ -8,7 +8,9 @@ from PyQt5.uic import loadUiType
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from scipy.signal import convolve2d
-
+from os import path
+from scipy.stats import mode
+import pickle
 from recording import AudioRecorder
 from voice import Voice
 import matplotlib.pyplot as plt
@@ -16,6 +18,9 @@ import matplotlib.animation as animation
 from PyQt5.QtCore import QTimer
 from fastdtw import fastdtw
 from scipy.spatial.distance import euclidean
+import librosa
+import pandas as pd
+
 FORM_CLASS, _ = loadUiType(
     path.join(path.dirname(__file__), "main.ui")
 )  # connects the Ui file with the Python file
@@ -29,10 +34,16 @@ class MainApp(QMainWindow, FORM_CLASS):
         self.recorder = AudioRecorder()
         self.recording_timer = QTimer(self)
         self.recording_timer.timeout.connect(self.start_recording)
+        with open('model.pkl', 'rb') as model_file:
+            self.rf_model = pickle.load(model_file)
+
+        # Load the scaler
+        with open('scaler.pkl', 'rb') as scaler_file:
+            self.scaler = pickle.load(scaler_file)
         self.passwords = {
             "unlock_the_gate": [
                 "unlock_the_gate.wav"
-                 
+
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
                 , None  # instance
@@ -41,7 +52,7 @@ class MainApp(QMainWindow, FORM_CLASS):
             ],
             "open_middle_door": [
                 "open_middle_door.wav"
-                 
+
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
                 , None  # instance
@@ -50,9 +61,7 @@ class MainApp(QMainWindow, FORM_CLASS):
             ],
             "grant_me_access": [
                 "grant_me_access.wav"
-                 
-                 
-                 
+
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
                 , None  # instance
@@ -63,76 +72,51 @@ class MainApp(QMainWindow, FORM_CLASS):
         # voice
         self.voice = {
             "ahmed_ali": [
-                ["voice_data_base/ahmed_ali_unlock_the_gate_0.wav", "voice_data_base/ahmed_ali_unlock_the_gate_1.wav",
-                 "voice_data_base/ahmed_ali_unlock_the_gate_2.wav", "voice_data_base/ahmed_ali_unlock_the_gate_3.wav",
-                 "voice_data_base/ahmed_ali_open_middle_door_0.wav", "voice_data_base/ahmed_ali_open_middle_door_1.wav",
-                 "voice_data_base/ahmed_ali_open_middle_door_2.wav", "voice_data_base/ahmed_ali_open_middle_door_3.wav",
-                 "voice_data_base/ahmed_ali_grant_me_access_0.wav", "voice_data_base/ahmed_ali_grant_me_access_1.wav",
-                 "voice_data_base/ahmed_ali_grant_me_access_2.wav", "voice_data_base/ahmed_ali_grant_me_access_3.wav"],
+                [],
                 None,  # similarity factor
-                [None, None, None, None, None, None, None, None, None, None, None, None],
+                [None],
                 True,  # Have access
-                50  # acceptable similarity factor
+                10  # acceptable similarity factor
             ],
-            "bedro": [["voice_data_base/bedro_unlock_the_gate_0.wav", "voice_data_base/bedro_unlock_the_gate_1.wav",
-                       "voice_data_base/bedro_unlock_the_gate_2.wav", "voice_data_base/bedro_unlock_the_gate_3.wav",
-                       "voice_data_base/bedro_open_middle_door_0.wav", "voice_data_base/bedro_open_middle_door_1.wav",
-                       "voice_data_base/bedro_open_middle_door_2.wav", "voice_data_base/bedro_open_middle_door_3.wav",
-                       "voice_data_base/bedro_grant_me_access_0.wav", "voice_data_base/bedro_grant_me_access_1.wav",
-                       "voice_data_base/bedro_grant_me_access_2.wav", "voice_data_base/bedro_grant_me_access_3.wav"],
+            "bedro": [[],
                       None,  # similarity factor
-                      [None, None, None, None, None, None, None, None, None, None, None, None],
+                      [None],
                       True,  # Have access
-                      80  # acceptable similarity factor
+                      10  # acceptable similarity factor
                       ],
 
-            "muhannad":[["voice_data_base/muhannad_unlock_the_gate_0.wav" , "voice_data_base/muhannad_unlock_the_gate_1.wav",
-                            "voice_data_base/muhannad_unlock_the_gate_2.wav" , "voice_data_base/muhannad_unlock_the_gate_3.wav",
-                            "voice_data_base/muhannad_open_middle_door_0.wav" , "voice_data_base/muhannad_open_middle_door_1.wav",
-                            "voice_data_base/muhannad_open_middle_door_2.wav" ,
-                            "voice_data_base/muhannad_open_middle_door_3.wav",
-                            "voice_data_base/muhannad_grant_me_access_0.wav", "voice_data_base/muhannad_grant_me_access_1.wav",
-                            "voice_data_base/muhannad_grant_me_access_2.wav", "voice_data_base/muhannad_grant_me_access_3.wav"],
+            "muhannad": [[],
 
-            None, #similarity factor
-            [None, None, None, None, None, None, None, None, None, None, None, None],
-            True
-            ,50
-            ],
+                         None,  # similarity factor
+                         [None],
+                         True
+                , 10
+                         ],
 
-            "hassan": [["voice_data_base/hassan_unlock_the_gate_0.wav", "voice_data_base/hassan_unlock_the_gate_1.wav",
-                        "voice_data_base/hassan_unlock_the_gate_2.wav", "voice_data_base/hassan_unlock_the_gate_3.wav",
-                        "voice_data_base/hassan_open_middle_door_0.wav", "voice_data_base/hassan_open_middle_door_1.wav",
-                        "voice_data_base/hassan_open_middle_door_2.wav",
-                        "voice_data_base/hassan_open_middle_door_3.wav",
-                        "voice_data_base/hassan_grant_me_access_0.wav", "voice_data_base/hassan_grant_me_access_1.wav",
-                        "voice_data_base/hassan_grant_me_access_2.wav", "voice_data_base/hassan_grant_me_access_3.wav"],
+            "hassan": [[],
                        None,  # similarity factor
-                       [None, None, None, None, None, None, None, None, None, None, None, None],
+                       [None],
                        True,  # Have access
-                       50  # acceptable similarity factor
+                       10  # acceptable similarity factor
                        ]
         }
 
         self.create_password_audio_instance()  # create instance of each password
-    
-    
-    
 
-    def check_word_similarity(self , tested , passwrd , passw):
-        tested_data , sampling_rate = tested.get_voice()
-        passwrd_data , sampling_rate = passwrd.get_voice()
+    def check_word_similarity(self, tested, passwrd, passw):
+        tested_data, sampling_rate = tested.get_voice()
+        passwrd_data, sampling_rate = passwrd.get_voice()
+
         normalized_tested_data = tested_data / np.max(np.abs(tested_data))
         normalized_passwrd_data = passwrd_data / np.max(np.abs(passwrd_data))
-        test_mfcc,_ = tested.extract_features_new(sampling_rate , normalized_tested_data)
-        pass_mfcc,_ = passwrd.extract_features_new(sampling_rate , normalized_passwrd_data)
-        distance, _  = fastdtw(test_mfcc, pass_mfcc, dist=euclidean)
-        print(f"{passw} : {distance}")
+
+        test_mfcc, _ = tested.extract_features_new(sampling_rate, normalized_tested_data)
+        pass_mfcc, _ = passwrd.extract_features_new(sampling_rate, normalized_passwrd_data)
+        distance, _ = fastdtw(test_mfcc, pass_mfcc, dist=euclidean)
+        # print(f"{passw} : {distance}")
         self.passwords[passw][1] = distance
         return distance
-    
-    
-    
+
     def handle_button(self):
         self.record_btn.clicked.connect(self.start_recording)
         # connect combox box word_access_i from 1 to 3 to the function change_word_access
@@ -142,6 +126,45 @@ class MainApp(QMainWindow, FORM_CLASS):
         # connect combox box person_access_i from 1 to 4 to the function change_voice_access
         for i in range(1, 5):
             getattr(self, 'person_access_' + str(i)).clicked.connect(self.change_word_access)
+
+    def extract_mfccs(self, file_path):
+        y, sr = librosa.load(file_path)
+        mfccs = librosa.feature.mfcc(y=y, sr=sr)
+        mfccs = mfccs.T
+        delta_mfccs = librosa.feature.delta(mfccs)
+        delta_mfccs = delta_mfccs
+
+        # (216) rows = frames ,  and (26) columns = features
+        features = np.hstack([mfccs, delta_mfccs])
+        feature_names = [f"MFCC_{i + 1}" for i in range(features.shape[1])]
+        return pd.DataFrame(features, columns=feature_names)
+
+    def extract_pitch(self, file_path):
+        y, sr = librosa.load(file_path)
+        pitches, magnitudes = librosa.core.piptrack(y=y, sr=sr)
+        pitch = np.mean(pitches[magnitudes > np.max(magnitudes) * 0.85])
+        return pd.DataFrame({"Pitch": [pitch]})
+
+    def extract_chroma(self, file_path):
+        y, sr = librosa.load(file_path)
+        chroma = librosa.feature.chroma_stft(y=y, sr=sr)
+        chroma = chroma.T
+        feature_names = [f"Chroma_{i + 1}" for i in range(chroma.shape[1])]
+        return pd.DataFrame(chroma, columns=feature_names)
+
+    def extract_zero_crossings(self, file_path):
+        y, sr = librosa.load(file_path)
+        zero_crossings = librosa.feature.zero_crossing_rate(y)
+        zero_crossings = zero_crossings.T
+        feature_names = [f"ZeroCrossings_{i + 1}" for i in range(zero_crossings.shape[1])]
+        return pd.DataFrame(zero_crossings, columns=feature_names)
+
+    def extract_spectral_contrast(self, file_path):
+        y, sr = librosa.load(file_path)
+        spectral_contrast = librosa.feature.spectral_contrast(y=y, sr=sr)
+        spectral_contrast = spectral_contrast.T
+        feature_names = [f"SpectralContrast_{i + 1}" for i in range(spectral_contrast.shape[1])]
+        return pd.DataFrame(spectral_contrast, columns=feature_names)
 
     def change_word_access(self):
         # change the access of the word
@@ -156,11 +179,7 @@ class MainApp(QMainWindow, FORM_CLASS):
     def create_password_audio_instance(self):
         for password in (self.passwords.keys()):
             # for i in range(len(self.passwords[password][0])):
-                self.passwords[password][2] = Voice(self.passwords[password][0])
-
-        for voice in (self.voice.keys()):
-            for i in range(len(self.voice[voice][0])):
-                self.voice[voice][2][i] = Voice(self.voice[voice][0][i])
+            self.passwords[password][2] = Voice(self.passwords[password][0])
 
     def start_recording(self):
         if self.record_btn.text() == "Start":
@@ -177,12 +196,29 @@ class MainApp(QMainWindow, FORM_CLASS):
             self.spectrogram(self.recorder.frames, 44100, self.widget)
             self.recorder.save_audio('trial.wav')
             test_voice = Voice('trial.wav')
-            for voice in self.voice:
-                self.voice[voice][1] = self.check_similarity(test_voice, self.voice[voice][2], voice, False)
+            # Extract features from the recorded voice using the provided functions
+            test_mfccs = self.extract_mfccs('trial.wav')
+            test_chroma = self.extract_chroma('trial.wav')
+            test_zero_crossings = self.extract_zero_crossings('trial.wav')
+            test_spectral_contrast = self.extract_spectral_contrast('trial.wav')
+            test_features = pd.concat([test_mfccs, test_chroma, test_zero_crossings, test_spectral_contrast], axis=1)
+            # Scale the features using the loaded scaler
+            test_features_scaled = self.scaler.transform(test_features)
+
+            # Make predictions using the loaded Random Forest model
+            predictions = self.rf_model.predict(test_features_scaled)
+            # Assuming predictions is your array of predictions
+            predicted_class = np.unique(predictions, return_counts=True)
+            predicted_class = predicted_class[0][np.argmax(predicted_class[1])]
+            # predicted_class = predictions[0]
+            print(predicted_class)
+            # Update the UI based on the prediction
+            self.label_2.setText(f"Prediction: {predicted_class}")
+
             for password in self.passwords:
                 self.passwords[password][1] = self.check_word_similarity(test_voice, self.passwords[password][2], password)
+
             min_similarity = 10000000
-            max_voice = 0
             Access = ""
 
             for i, password in enumerate(self.passwords):
@@ -199,59 +235,9 @@ class MainApp(QMainWindow, FORM_CLASS):
                     else:
                         Access = "Access Granted"
 
-            for i, voice in enumerate(self.voice):
-                # set person_perc_i and person_bar_i from 1 to 4 to the similarity factor percentage
-                factor_percentage = round(self.voice[voice][1], 2)
-                getattr(self, 'person_perc_' + str(i + 1)).setText(str(factor_percentage))
-                getattr(self, 'person_bar_' + str(i + 1)).setValue(int(factor_percentage))
-
-                if self.voice[voice][1] > max_voice:
-                    max_voice = self.voice[voice][1]
-                    similar_person = voice
-                    if max_voice <  self.voice[similar_person][4] or not self.voice[similar_person][3]:
-                        Access = "Access Denied"
-                    else:
-                        Access = "Access Granted"
 
             self.label.setText(similar_word)
-            self.label_2.setText(similar_person)
             self.access_label.setText(Access)
-
-
-    def check_similarity(self, test_voice, password_voice, keyword, word=True):
-        similarity_score = []
-        correlation = []
-        convulotion = []
-
-        for i in range(len(password_voice)):
-            if word:
-                features1 = test_voice.get_stft()
-                features2 = password_voice[i].get_stft()
-            else:
-                features1 = test_voice.extract_features()
-                features2 = password_voice[i].extract_features()
-
-            features1, features2 = self.match_signal_length(features1, features2)
-
-            # similarity_score = np.linalg.norm(features1 - features2)
-            similarity_score.append(
-                np.mean(np.dot(features1.T, features2) / (np.linalg.norm(features1) * np.linalg.norm(features2))))
-            # Compute Pearson correlation coefficient
-            correlation.append(np.corrcoef(features1.flatten(), features2.flatten())[0, 1])
-            # Compute convolution
-            convulotion.append(convolve2d(features1, features2, mode='valid'))
-
-        similarity_score = np.mean(similarity_score) * 10000
-        correlation = np.mean(correlation) * 100
-        convulotion = np.mean(convulotion)
-
-        # print(keyword)
-        # print('correlation', correlation)
-        # print("similarity_score", similarity_score)
-        # print("convulotion", convulotion)
-        # print("")
-
-        return correlation
 
     def match_signal_length(self, signal1, signal2):
         len1, len2 = signal1.shape[1], signal2.shape[1]
