@@ -48,7 +48,7 @@ class MainApp(QMainWindow, FORM_CLASS):
                 , None  # similarity factor
                 , None  # instance
                 , True  # Have access
-                , 20  # acceptable similarity factor
+                , 16000  # acceptable similarity factor
             ],
             "open_middle_door": [
                 "open_middle_door.wav"
@@ -57,7 +57,7 @@ class MainApp(QMainWindow, FORM_CLASS):
                 , None  # similarity factor
                 , None  # instance
                 , True  # Have access
-                , 12  # acceptable similarity factor
+                , 16000  # acceptable similarity factor
             ],
             "grant_me_access": [
                 "grant_me_access.wav"
@@ -66,7 +66,7 @@ class MainApp(QMainWindow, FORM_CLASS):
                 , None  # similarity factor
                 , None  # instance
                 , True  # Have access
-                , 11  # acceptable similarity factor
+                , 16000  # acceptable similarity factor
             ],
         }
         # voice
@@ -113,7 +113,8 @@ class MainApp(QMainWindow, FORM_CLASS):
         test_mfcc, _ = tested.extract_features_new(sampling_rate, normalized_tested_data)
         pass_mfcc, _ = passwrd.extract_features_new(sampling_rate, normalized_passwrd_data)
         distance, _ = fastdtw(test_mfcc, pass_mfcc, dist=euclidean)
-        # print(f"{passw} : {distance}")
+
+        print(f"{passw} : {distance}")
         self.passwords[passw][1] = distance
         return distance
 
@@ -216,27 +217,32 @@ class MainApp(QMainWindow, FORM_CLASS):
             self.label_2.setText(f"Prediction: {predicted_class}")
 
             for password in self.passwords:
-                self.passwords[password][1] = self.check_word_similarity(test_voice, self.passwords[password][2], password)
+                self.passwords[password][1] = self.check_word_similarity(test_voice, self.passwords[password][2],
+                                                                         password)
 
-            min_similarity = 10000000
+            # make the distance as a percentage where the lowest distance is the highest percentage but not 100 %
+
+
+            max_similarity = 0
             Access = ""
 
+            # if the minimum distance is greater than the acceptable distance which is 16000 then the user has no access
+            # else the user has access and set the access to the password that has the minimum distance and the progress bar to the percentage of the distance
             for i, password in enumerate(self.passwords):
-                # set word_perc_i and word_bar_i from 1 to 3 to the similarity factor percentage to two decimal places
-                factor_percentage = round(self.passwords[password][1], 2)
-                getattr(self, 'word_perc_' + str(i + 1)).setText(str(factor_percentage))
-                getattr(self, 'word_bar_' + str(i + 1)).setValue(int(factor_percentage))
+                if self.passwords[password][1] < self.passwords[password][4]:
+                    Access = 'Access Granted'
+                    max_similarity = self.passwords[password][1]
+                    factor_percentage = int((1 - (self.passwords[password][1] / self.passwords[password][4])) * 100)
+                    getattr(self, 'word_perc_' + str(i + 1)).setText(str(factor_percentage))
+                    getattr(self, 'word_bar_' + str(i + 1)).setValue(int(factor_percentage))
 
-                if self.passwords[password][1] < min_similarity:
-                    min_similarity = self.passwords[password][1]
-                    similar_word = password
-                    if min_similarity > self.passwords[similar_word][4] or not self.passwords[similar_word][3]:
-                        Access = "Access Denied"
-                    else:
-                        Access = "Access Granted"
+                    break
+                else:
+                    Access = "Access Denied"
+                    max_similarity = self.passwords[password][1]
+                    self.progressBar.setValue(0)
 
-
-            self.label.setText(similar_word)
+            self.label.setText(max_similarity)
             self.access_label.setText(Access)
 
     def match_signal_length(self, signal1, signal2):
