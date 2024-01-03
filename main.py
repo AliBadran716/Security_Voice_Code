@@ -11,7 +11,11 @@ from scipy.signal import convolve2d
 
 from recording import AudioRecorder
 from voice import Voice
-
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from PyQt5.QtCore import QTimer
+from fastdtw import fastdtw
+from scipy.spatial.distance import euclidean
 FORM_CLASS, _ = loadUiType(
     path.join(path.dirname(__file__), "main.ui")
 )  # connects the Ui file with the Python file
@@ -23,227 +27,112 @@ class MainApp(QMainWindow, FORM_CLASS):
         self.setupUi(self)
         self.handle_button()
         self.recorder = AudioRecorder()
+        self.recording_timer = QTimer(self)
+        self.recording_timer.timeout.connect(self.start_recording)
         self.passwords = {
             "unlock_the_gate": [
-                ["voice_data_base/ahmed_ali_unlock_the_gate_0.wav", "voice_data_base/ahmed_ali_unlock_the_gate_1.wav",  # 10 ahmed_ali
-                 "voice_data_base/ahmed_ali_unlock_the_gate_2.wav", "voice_data_base/ahmed_ali_unlock_the_gate_3.wav",
-                 "voice_data_base/ahmed_ali_unlock_the_gate_4.wav", "voice_data_base/ahmed_ali_unlock_the_gate_5.wav",
-                 "voice_data_base/ahmed_ali_unlock_the_gate_6.wav", "voice_data_base/ahmed_ali_unlock_the_gate_7.wav",
-                 "voice_data_base/ahmed_ali_unlock_the_gate_8.wav", "voice_data_base/ahmed_ali_unlock_the_gate_9.wav",
-                 "voice_data_base/bedro_unlock_the_gate_0.wav", "voice_data_base/bedro_unlock_the_gate_1.wav",  # 10 bedro
-                 "voice_data_base/bedro_unlock_the_gate_2.wav", "voice_data_base/bedro_unlock_the_gate_3.wav",
-                 "voice_data_base/bedro_unlock_the_gate_4.wav", "voice_data_base/bedro_unlock_the_gate_5.wav",
-                 "voice_data_base/bedro_unlock_the_gate_6.wav", "voice_data_base/bedro_unlock_the_gate_7.wav",
-                 "voice_data_base/bedro_unlock_the_gate_8.wav", "voice_data_base/bedro_unlock_the_gate_9.wav",
-                 "voice_data_base/hassan_unlock_the_gate_0.wav", "voice_data_base/hassan_unlock_the_gate_1.wav",  # 10 hassan
-                 "voice_data_base/hassan_unlock_the_gate_2.wav", "voice_data_base/hassan_unlock_the_gate_3.wav",
-                 "voice_data_base/hassan_unlock_the_gate_4.wav", "voice_data_base/hassan_unlock_the_gate_5.wav",
-                 "voice_data_base/hassan_unlock_the_gate_6.wav", "voice_data_base/hassan_unlock_the_gate_7.wav",
-                 "voice_data_base/hassan_unlock_the_gate_8.wav", "voice_data_base/hassan_unlock_the_gate_9.wav",
-                 "voice_data_base/muhannad_unlock_the_gate_0.wav", "voice_data_base/muhannad_unlock_the_gate_1.wav",  # 10 muhannad
-                 "voice_data_base/muhannad_unlock_the_gate_2.wav", "voice_data_base/muhannad_unlock_the_gate_3.wav",
-                 "voice_data_base/muhannad_unlock_the_gate_4.wav", "voice_data_base/muhannad_unlock_the_gate_5.wav",
-                 "voice_data_base/muhannad_unlock_the_gate_6.wav", "voice_data_base/muhannad_unlock_the_gate_7.wav",
-                 "voice_data_base/muhannad_unlock_the_gate_8.wav", "voice_data_base/muhannad_unlock_the_gate_9.wav"
-                 ]
+                "unlock_the_gate.wav"
+                 
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
-                , [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                   None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                   None, None, None, None, None, None]  # instance
+                , None  # instance
                 , True  # Have access
                 , 20  # acceptable similarity factor
-                , []  # list of features of each wav file
-                , None  # mean of features
             ],
             "open_middle_door": [
-                ["voice_data_base/ahmed_ali_open_middle_door_0.wav", "voice_data_base/ahmed_ali_open_middle_door_1.wav",  # 10 ahmed_ali
-                 "voice_data_base/ahmed_ali_open_middle_door_2.wav", "voice_data_base/ahmed_ali_open_middle_door_3.wav",
-                 "voice_data_base/ahmed_ali_open_middle_door_4.wav", "voice_data_base/ahmed_ali_open_middle_door_5.wav",
-                 "voice_data_base/ahmed_ali_open_middle_door_6.wav", "voice_data_base/ahmed_ali_open_middle_door_7.wav",
-                 "voice_data_base/ahmed_ali_open_middle_door_8.wav", "voice_data_base/ahmed_ali_open_middle_door_9.wav",
-                 "voice_data_base/bedro_open_middle_door_0.wav", "voice_data_base/bedro_open_middle_door_1.wav",   # 10 bedro
-                 "voice_data_base/bedro_open_middle_door_2.wav", "voice_data_base/bedro_open_middle_door_3.wav",
-                 "voice_data_base/bedro_open_middle_door_4.wav", "voice_data_base/bedro_open_middle_door_5.wav",
-                 "voice_data_base/bedro_open_middle_door_6.wav", "voice_data_base/bedro_open_middle_door_7.wav",
-                 "voice_data_base/bedro_open_middle_door_8.wav", "voice_data_base/bedro_open_middle_door_9.wav",
-                 "voice_data_base/hassan_open_middle_door_0.wav", "voice_data_base/hassan_open_middle_door_1.wav",  # 10 hassan
-                 "voice_data_base/hassan_open_middle_door_2.wav", "voice_data_base/hassan_open_middle_door_3.wav",
-                 "voice_data_base/hassan_open_middle_door_4.wav", "voice_data_base/hassan_open_middle_door_5.wav",
-                 "voice_data_base/hassan_open_middle_door_6.wav", "voice_data_base/hassan_open_middle_door_7.wav",
-                 "voice_data_base/hassan_open_middle_door_8.wav", "voice_data_base/hassan_open_middle_door_9.wav",
-                 "voice_data_base/muhannad_open_middle_door_0.wav", "voice_data_base/muhannad_open_middle_door_1.wav",  # 10 muhannad
-                 "voice_data_base/muhannad_open_middle_door_2.wav", "voice_data_base/muhannad_open_middle_door_3.wav",
-                 "voice_data_base/muhannad_open_middle_door_4.wav", "voice_data_base/muhannad_open_middle_door_5.wav",
-                 "voice_data_base/muhannad_open_middle_door_6.wav", "voice_data_base/muhannad_open_middle_door_7.wav",
-                 "voice_data_base/muhannad_open_middle_door_8.wav", "voice_data_base/muhannad_open_middle_door_9.wav"
-                 ]
+                "open_middle_door.wav"
+                 
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
-                , [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                   None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                   None, None, None, None, None, None]  # instance
+                , None  # instance
                 , True  # Have access
                 , 12  # acceptable similarity factor
-                , []  # list of features of each wav file
-                , None  # mean of features
             ],
             "grant_me_access": [
-                ["voice_data_base/ahmed_ali_grant_me_access_0.wav", "voice_data_base/ahmed_ali_grant_me_access_1.wav",  # 10 ahmed_ali
-                    "voice_data_base/ahmed_ali_grant_me_access_2.wav", "voice_data_base/ahmed_ali_grant_me_access_3.wav",
-                    "voice_data_base/ahmed_ali_grant_me_access_4.wav", "voice_data_base/ahmed_ali_grant_me_access_5.wav",
-                    "voice_data_base/ahmed_ali_grant_me_access_6.wav", "voice_data_base/ahmed_ali_grant_me_access_7.wav",
-                    "voice_data_base/ahmed_ali_grant_me_access_8.wav", "voice_data_base/ahmed_ali_grant_me_access_9.wav",
-                    "voice_data_base/bedro_grant_me_access_0.wav", "voice_data_base/bedro_grant_me_access_1.wav",  # 10 bedro
-                    "voice_data_base/bedro_grant_me_access_2.wav", "voice_data_base/bedro_grant_me_access_3.wav",
-                    "voice_data_base/bedro_grant_me_access_4.wav", "voice_data_base/bedro_grant_me_access_5.wav",
-                    "voice_data_base/bedro_grant_me_access_6.wav", "voice_data_base/bedro_grant_me_access_7.wav",
-                    "voice_data_base/bedro_grant_me_access_8.wav", "voice_data_base/bedro_grant_me_access_9.wav",
-                    "voice_data_base/hassan_grant_me_access_0.wav", "voice_data_base/hassan_grant_me_access_1.wav",  # 10 hassan
-                    "voice_data_base/hassan_grant_me_access_2.wav", "voice_data_base/hassan_grant_me_access_3.wav",
-                    "voice_data_base/hassan_grant_me_access_4.wav", "voice_data_base/hassan_grant_me_access_5.wav",
-                    "voice_data_base/hassan_grant_me_access_6.wav", "voice_data_base/hassan_grant_me_access_7.wav",
-                    "voice_data_base/hassan_grant_me_access_8.wav", "voice_data_base/hassan_grant_me_access_9.wav",
-                    "voice_data_base/muhannad_grant_me_access_0.wav", "voice_data_base/muhannad_grant_me_access_1.wav",  # 10 muhannad
-                    "voice_data_base/muhannad_grant_me_access_2.wav", "voice_data_base/muhannad_grant_me_access_3.wav",
-                    "voice_data_base/muhannad_grant_me_access_4.wav", "voice_data_base/muhannad_grant_me_access_5.wav",
-                    "voice_data_base/muhannad_grant_me_access_6.wav", "voice_data_base/muhannad_grant_me_access_7.wav",
-                    "voice_data_base/muhannad_grant_me_access_8.wav", "voice_data_base/muhannad_grant_me_access_9.wav"
-                    ]
+                "grant_me_access.wav"
+                 
+                 
+                 
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
-                , [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                   None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
-                # instance
+                , None  # instance
                 , True  # Have access
                 , 11  # acceptable similarity factor
-                , []  # list of features of each wav file
-                , None  # mean of features
             ],
         }
         # voice
         self.voice = {
             "ahmed_ali": [
-                ["voice_data_base/ahmed_ali_unlock_the_gate_0.wav", "voice_data_base/ahmed_ali_unlock_the_gate_1.wav",  # 10 unlock the gate
+                ["voice_data_base/ahmed_ali_unlock_the_gate_0.wav", "voice_data_base/ahmed_ali_unlock_the_gate_1.wav",
                  "voice_data_base/ahmed_ali_unlock_the_gate_2.wav", "voice_data_base/ahmed_ali_unlock_the_gate_3.wav",
-                 "voice_data_base/ahmed_ali_unlock_the_gate_4.wav", "voice_data_base/ahmed_ali_unlock_the_gate_5.wav",
-                 "voice_data_base/ahmed_ali_unlock_the_gate_6.wav", "voice_data_base/ahmed_ali_unlock_the_gate_7.wav",
-                 "voice_data_base/ahmed_ali_unlock_the_gate_8.wav", "voice_data_base/ahmed_ali_unlock_the_gate_9.wav",
-                 "voice_data_base/ahmed_ali_open_middle_door_0.wav", "voice_data_base/ahmed_ali_open_middle_door_1.wav",  # 10 open middle door
+                 "voice_data_base/ahmed_ali_open_middle_door_0.wav", "voice_data_base/ahmed_ali_open_middle_door_1.wav",
                  "voice_data_base/ahmed_ali_open_middle_door_2.wav", "voice_data_base/ahmed_ali_open_middle_door_3.wav",
-                 "voice_data_base/ahmed_ali_open_middle_door_4.wav", "voice_data_base/ahmed_ali_open_middle_door_5.wav",
-                 "voice_data_base/ahmed_ali_open_middle_door_6.wav", "voice_data_base/ahmed_ali_open_middle_door_7.wav",
-                 "voice_data_base/ahmed_ali_open_middle_door_8.wav", "voice_data_base/ahmed_ali_open_middle_door_9.wav",
-                 "voice_data_base/ahmed_ali_grant_me_access_0.wav", "voice_data_base/ahmed_ali_grant_me_access_1.wav",  # 10 grant me access
-                 "voice_data_base/ahmed_ali_grant_me_access_2.wav", "voice_data_base/ahmed_ali_grant_me_access_3.wav",
-                 "voice_data_base/ahmed_ali_grant_me_access_4.wav", "voice_data_base/ahmed_ali_grant_me_access_5.wav",
-                 "voice_data_base/ahmed_ali_grant_me_access_6.wav", "voice_data_base/ahmed_ali_grant_me_access_7.wav",
-                 "voice_data_base/ahmed_ali_grant_me_access_8.wav", "voice_data_base/ahmed_ali_grant_me_access_9.wav",
-                 ],
+                 "voice_data_base/ahmed_ali_grant_me_access_0.wav", "voice_data_base/ahmed_ali_grant_me_access_1.wav",
+                 "voice_data_base/ahmed_ali_grant_me_access_2.wav", "voice_data_base/ahmed_ali_grant_me_access_3.wav"],
                 None,  # similarity factor
-                [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                 None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                 None],
+                [None, None, None, None, None, None, None, None, None, None, None, None],
                 True,  # Have access
                 50  # acceptable similarity factor
-                , []  # list of features of each wav file
-                , None  # mean of features
             ],
-            "bedro": [["voice_data_base/bedro_unlock_the_gate_0.wav", "voice_data_base/bedro_unlock_the_gate_1.wav",  # 10 unlock the gate
+            "bedro": [["voice_data_base/bedro_unlock_the_gate_0.wav", "voice_data_base/bedro_unlock_the_gate_1.wav",
                        "voice_data_base/bedro_unlock_the_gate_2.wav", "voice_data_base/bedro_unlock_the_gate_3.wav",
-                       "voice_data_base/bedro_unlock_the_gate_4.wav", "voice_data_base/bedro_unlock_the_gate_5.wav",
-                       "voice_data_base/bedro_unlock_the_gate_6.wav", "voice_data_base/bedro_unlock_the_gate_7.wav",
-                       "voice_data_base/bedro_unlock_the_gate_8.wav", "voice_data_base/bedro_unlock_the_gate_9.wav",
-                       "voice_data_base/bedro_open_middle_door_0.wav", "voice_data_base/bedro_open_middle_door_1.wav",  # 10 open middle door
+                       "voice_data_base/bedro_open_middle_door_0.wav", "voice_data_base/bedro_open_middle_door_1.wav",
                        "voice_data_base/bedro_open_middle_door_2.wav", "voice_data_base/bedro_open_middle_door_3.wav",
-                       "voice_data_base/bedro_open_middle_door_4.wav", "voice_data_base/bedro_open_middle_door_5.wav",
-                       "voice_data_base/bedro_open_middle_door_6.wav", "voice_data_base/bedro_open_middle_door_7.wav",
-                       "voice_data_base/bedro_open_middle_door_8.wav", "voice_data_base/bedro_open_middle_door_9.wav",
-                       "voice_data_base/bedro_grant_me_access_0.wav", "voice_data_base/bedro_grant_me_access_1.wav",  # 10 grant me access
-                       "voice_data_base/bedro_grant_me_access_2.wav", "voice_data_base/bedro_grant_me_access_3.wav",
-                       "voice_data_base/bedro_grant_me_access_4.wav", "voice_data_base/bedro_grant_me_access_5.wav",
-                       "voice_data_base/bedro_grant_me_access_6.wav", "voice_data_base/bedro_grant_me_access_7.wav",
-                       "voice_data_base/bedro_grant_me_access_8.wav", "voice_data_base/bedro_grant_me_access_9.wav"],
+                       "voice_data_base/bedro_grant_me_access_0.wav", "voice_data_base/bedro_grant_me_access_1.wav",
+                       "voice_data_base/bedro_grant_me_access_2.wav", "voice_data_base/bedro_grant_me_access_3.wav"],
                       None,  # similarity factor
-                      [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                       None, None, None, None, None, None, None, None, None, None, None, None, None, None],
+                      [None, None, None, None, None, None, None, None, None, None, None, None],
                       True,  # Have access
                       80  # acceptable similarity factor
-                , []  # list of features of each wav file
-                , None  # mean of features
                       ],
 
-            "hassan": [["voice_data_base/hassan_unlock_the_gate_0.wav", "voice_data_base/hassan_unlock_the_gate_1.wav",  # 10 unlock the gate
+            "muhannad":[["voice_data_base/muhannad_unlock_the_gate_0.wav" , "voice_data_base/muhannad_unlock_the_gate_1.wav",
+                            "voice_data_base/muhannad_unlock_the_gate_2.wav" , "voice_data_base/muhannad_unlock_the_gate_3.wav",
+                            "voice_data_base/muhannad_open_middle_door_0.wav" , "voice_data_base/muhannad_open_middle_door_1.wav",
+                            "voice_data_base/muhannad_open_middle_door_2.wav" ,
+                            "voice_data_base/muhannad_open_middle_door_3.wav",
+                            "voice_data_base/muhannad_grant_me_access_0.wav", "voice_data_base/muhannad_grant_me_access_1.wav",
+                            "voice_data_base/muhannad_grant_me_access_2.wav", "voice_data_base/muhannad_grant_me_access_3.wav"],
+
+            None, #similarity factor
+            [None, None, None, None, None, None, None, None, None, None, None, None],
+            True
+            ,50
+            ],
+
+            "hassan": [["voice_data_base/hassan_unlock_the_gate_0.wav", "voice_data_base/hassan_unlock_the_gate_1.wav",
                         "voice_data_base/hassan_unlock_the_gate_2.wav", "voice_data_base/hassan_unlock_the_gate_3.wav",
-                        "voice_data_base/hassan_unlock_the_gate_4.wav", "voice_data_base/hassan_unlock_the_gate_5.wav",
-                        "voice_data_base/hassan_unlock_the_gate_6.wav", "voice_data_base/hassan_unlock_the_gate_7.wav",
-                        "voice_data_base/hassan_unlock_the_gate_8.wav", "voice_data_base/hassan_unlock_the_gate_9.wav",
-                        "voice_data_base/hassan_open_middle_door_0.wav",  # 10 open middle door
-                        "voice_data_base/hassan_open_middle_door_1.wav",
+                        "voice_data_base/hassan_open_middle_door_0.wav", "voice_data_base/hassan_open_middle_door_1.wav",
                         "voice_data_base/hassan_open_middle_door_2.wav",
                         "voice_data_base/hassan_open_middle_door_3.wav",
-                        "voice_data_base/hassan_open_middle_door_4.wav",
-                        "voice_data_base/hassan_open_middle_door_5.wav",
-                        "voice_data_base/hassan_open_middle_door_6.wav",
-                        "voice_data_base/hassan_open_middle_door_7.wav",
-                        "voice_data_base/hassan_open_middle_door_8.wav",
-                        "voice_data_base/hassan_open_middle_door_9.wav",
-                        "voice_data_base/hassan_grant_me_access_0.wav", "voice_data_base/hassan_grant_me_access_1.wav",  # 10 grant me access
-                        "voice_data_base/hassan_grant_me_access_2.wav", "voice_data_base/hassan_grant_me_access_3.wav",
-                        "voice_data_base/hassan_grant_me_access_4.wav", "voice_data_base/hassan_grant_me_access_5.wav",
-                        "voice_data_base/hassan_grant_me_access_6.wav", "voice_data_base/hassan_grant_me_access_7.wav",
-                        "voice_data_base/hassan_grant_me_access_8.wav", "voice_data_base/hassan_grant_me_access_9.wav"],
+                        "voice_data_base/hassan_grant_me_access_0.wav", "voice_data_base/hassan_grant_me_access_1.wav",
+                        "voice_data_base/hassan_grant_me_access_2.wav", "voice_data_base/hassan_grant_me_access_3.wav"],
                        None,  # similarity factor
-                       [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                        None, None, None, None, None, None, None, None, None, None, None, None, None, None],
+                       [None, None, None, None, None, None, None, None, None, None, None, None],
                        True,  # Have access
                        50  # acceptable similarity factor
-                , []  # list of features of each wav file
-                , None  # mean of features
-                       ],
-            "muhannad": [["voice_data_base/muhannad_unlock_the_gate_0.wav",  # 10 unlock the gate
-                          "voice_data_base/muhannad_unlock_the_gate_1.wav",
-                          "voice_data_base/muhannad_unlock_the_gate_2.wav",
-                          "voice_data_base/muhannad_unlock_the_gate_3.wav",
-                          "voice_data_base/muhannad_unlock_the_gate_4.wav",
-                          "voice_data_base/muhannad_unlock_the_gate_5.wav",
-                          "voice_data_base/muhannad_unlock_the_gate_6.wav",
-                          "voice_data_base/muhannad_unlock_the_gate_7.wav",
-                          "voice_data_base/muhannad_unlock_the_gate_8.wav",
-                          "voice_data_base/muhannad_unlock_the_gate_9.wav",
-                          "voice_data_base/muhannad_open_middle_door_0.wav",  # 10 open middle door
-                          "voice_data_base/muhannad_open_middle_door_1.wav",
-                          "voice_data_base/muhannad_open_middle_door_2.wav",
-                          "voice_data_base/muhannad_open_middle_door_3.wav",
-                          "voice_data_base/muhannad_open_middle_door_4.wav",
-                          "voice_data_base/muhannad_open_middle_door_5.wav",
-                          "voice_data_base/muhannad_open_middle_door_6.wav",
-                          "voice_data_base/muhannad_open_middle_door_7.wav",
-                          "voice_data_base/muhannad_open_middle_door_8.wav",
-                          "voice_data_base/muhannad_open_middle_door_9.wav",
-                          "voice_data_base/muhannad_grant_me_access_0.wav",  # 10 grant me access
-                          "voice_data_base/muhannad_grant_me_access_1.wav",
-                          "voice_data_base/muhannad_grant_me_access_2.wav",
-                          "voice_data_base/muhannad_grant_me_access_3.wav",
-                          "voice_data_base/muhannad_grant_me_access_4.wav",
-                          "voice_data_base/muhannad_grant_me_access_5.wav",
-                          "voice_data_base/muhannad_grant_me_access_6.wav",
-                          "voice_data_base/muhannad_grant_me_access_7.wav",
-                          "voice_data_base/muhannad_grant_me_access_8.wav",
-                          "voice_data_base/muhannad_grant_me_access_9.wav"],
-                         None,  # similarity factor
-                         [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                          None, None, None, None, None, None, None, None, None, None, None, None, None, None, None],
-                         True,
-                         50,
-                         []  # list of features of each wav file
-                , None  # mean of features
-                         ]
+                       ]
         }
-        self.adjust_none_list(self.passwords)
-        self.adjust_none_list(self.voice)
-        self.create_password_audio_instance()  # create instance of each password
 
+        self.create_password_audio_instance()  # create instance of each password
+    
+    
+    
+
+    def check_word_similarity(self , tested , passwrd , passw):
+        tested_data , sampling_rate = tested.get_voice()
+        passwrd_data , sampling_rate = passwrd.get_voice()
+        normalized_tested_data = tested_data / np.max(np.abs(tested_data))
+        normalized_passwrd_data = passwrd_data / np.max(np.abs(passwrd_data))
+        test_mfcc,_ = tested.extract_features_new(sampling_rate , normalized_tested_data)
+        pass_mfcc,_ = passwrd.extract_features_new(sampling_rate , normalized_passwrd_data)
+        distance, _  = fastdtw(test_mfcc, pass_mfcc, dist=euclidean)
+        print(f"{passw} : {distance}")
+        self.passwords[passw][1] = distance
+        return distance
+    
+    
+    
     def handle_button(self):
         self.record_btn.clicked.connect(self.start_recording)
         # connect combox box word_access_i from 1 to 3 to the function change_word_access
@@ -264,77 +153,35 @@ class MainApp(QMainWindow, FORM_CLASS):
             is_checked = getattr(self, 'person_access_' + str(i + 1)).isChecked()
             self.voice[voice][3] = is_checked
 
-    def adjust_none_list(self, data):
-        for key in data:
-            file_paths = data[key][0]
-            none_list = data[key][2]
-
-            if len(file_paths) != len(none_list):
-                data[key][2] = [None] * len(file_paths)
-
-        return data
-
     def create_password_audio_instance(self):
-        for password in self.passwords.keys():
-            max_feature_length = 0  # Initialize max_feature_length to 0
+        for password in (self.passwords.keys()):
+            # for i in range(len(self.passwords[password][0])):
+                self.passwords[password][2] = Voice(self.passwords[password][0])
 
-            for i in range(len(self.passwords[password][0])):
-                voice_instance = Voice(self.passwords[password][0][i])
-                self.passwords[password][2].append(voice_instance)
-                features = voice_instance.extract_features()
-                max_feature_length = max(max_feature_length, features.shape[1])  # Update max_feature_length
-                self.passwords[password][5].append(features)
-
-            # Pad or truncate features based on max_feature_length
-            for i in range(len(self.passwords[password][5])):
-                padded_features = np.pad(self.passwords[password][5][i],
-                                         ((0, 0), (0, max_feature_length - self.passwords[password][5][i].shape[1])))
-                self.passwords[password][5][i] = padded_features
-
-            self.passwords[password][6] = np.mean(self.passwords[password][5], axis=0)
-            print(self.passwords[password][6])
-
-
-
-        for voice in self.voice.keys():
-            max_feature_length = 0  # Initialize max_feature_length to 0
-
+        for voice in (self.voice.keys()):
             for i in range(len(self.voice[voice][0])):
-                voice_instance = Voice(self.voice[voice][0][i])
-                self.voice[voice][2].append(voice_instance)
-                features = voice_instance.extract_features()
-                max_feature_length = max(max_feature_length, features.shape[1])  # Update max_feature_length
-                self.voice[voice][5].append(features)
-
-            # Pad or truncate features based on max_feature_length
-            for i in range(len(self.voice[voice][5])):
-                padded_features = np.pad(self.voice[voice][5][i],
-                                         ((0, 0), (0, max_feature_length - self.voice[voice][5][i].shape[1])))
-                self.voice[voice][5][i] = padded_features
-
-            self.voice[voice][6] = np.mean(self.voice[voice][5], axis=0)
+                self.voice[voice][2][i] = Voice(self.voice[voice][0][i])
 
     def start_recording(self):
-        if (self.record_btn.text() == "Start"):
-            print("Start Recording")
+        if self.record_btn.text() == "Start":
+            # print("Start Recording")
             self.record_btn.setText("Stop")
             self.recorder = AudioRecorder()
             self.recorder.start_recording()
+            self.recording_timer.start(2500)  # Set timer for 2 seconds
         else:
-            print("Stop Recording")
+            # print("Stop Recording")
             self.record_btn.setText("Start")
+            self.recording_timer.stop()  # Stop the timer
             self.recorder.stop_recording()
             self.spectrogram(self.recorder.frames, 44100, self.widget)
-            self.recorder.save_audio("trial.wav")
+            self.recorder.save_audio('trial.wav')
             test_voice = Voice('trial.wav')
             for voice in self.voice:
-                print(self.voice[voice][6])
-                self.voice[voice][1] = self.check_similarity2(test_voice, voice)
-                # print(self.voice[voice][2],i)
+                self.voice[voice][1] = self.check_similarity(test_voice, self.voice[voice][2], voice, False)
             for password in self.passwords:
-                self.passwords[password][1] = self.check_similarity2(test_voice, password)
-
-            max_similarity = 0
+                self.passwords[password][1] = self.check_word_similarity(test_voice, self.passwords[password][2], password)
+            min_similarity = 10000000
             max_voice = 0
             Access = ""
 
@@ -344,10 +191,10 @@ class MainApp(QMainWindow, FORM_CLASS):
                 getattr(self, 'word_perc_' + str(i + 1)).setText(str(factor_percentage))
                 getattr(self, 'word_bar_' + str(i + 1)).setValue(int(factor_percentage))
 
-                if self.passwords[password][1] > max_similarity:
-                    max_similarity = self.passwords[password][1]
+                if self.passwords[password][1] < min_similarity:
+                    min_similarity = self.passwords[password][1]
                     similar_word = password
-                    if max_similarity < self.passwords[similar_word][4] or not self.passwords[similar_word][3]:
+                    if min_similarity > self.passwords[similar_word][4] or not self.passwords[similar_word][3]:
                         Access = "Access Denied"
                     else:
                         Access = "Access Granted"
@@ -361,7 +208,7 @@ class MainApp(QMainWindow, FORM_CLASS):
                 if self.voice[voice][1] > max_voice:
                     max_voice = self.voice[voice][1]
                     similar_person = voice
-                    if max_voice < self.voice[similar_person][4] or not self.voice[similar_person][3]:
+                    if max_voice <  self.voice[similar_person][4] or not self.voice[similar_person][3]:
                         Access = "Access Denied"
                     else:
                         Access = "Access Granted"
@@ -370,8 +217,9 @@ class MainApp(QMainWindow, FORM_CLASS):
             self.label_2.setText(similar_person)
             self.access_label.setText(Access)
 
+
     def check_similarity(self, test_voice, password_voice, keyword, word=True):
-        dot_product = []
+        similarity_score = []
         correlation = []
         convulotion = []
 
@@ -385,39 +233,24 @@ class MainApp(QMainWindow, FORM_CLASS):
 
             features1, features2 = self.match_signal_length(features1, features2)
 
-            # dot_product = np.linalg.norm(features1 - features2)
-            dot_product.append(
+            # similarity_score = np.linalg.norm(features1 - features2)
+            similarity_score.append(
                 np.mean(np.dot(features1.T, features2) / (np.linalg.norm(features1) * np.linalg.norm(features2))))
             # Compute Pearson correlation coefficient
             correlation.append(np.corrcoef(features1.flatten(), features2.flatten())[0, 1])
             # Compute convolution
             convulotion.append(convolve2d(features1, features2, mode='valid'))
 
-        dot_product = np.mean(dot_product) * 10000
+        similarity_score = np.mean(similarity_score) * 10000
         correlation = np.mean(correlation) * 100
         convulotion = np.mean(convulotion)
 
-        print(keyword)
-        print('correlation', correlation)
-        print("dot_product", dot_product)
-        print("convulotion", convulotion)
-        print("")
+        # print(keyword)
+        # print('correlation', correlation)
+        # print("similarity_score", similarity_score)
+        # print("convulotion", convulotion)
+        # print("")
 
-        return correlation
-
-    def check_similarity2(self, test_voice, keyword):
-        features1 = test_voice.extract_features()
-        if keyword in self.passwords and self.passwords[keyword][6] is not None:
-            features2 = self.passwords[keyword][6]
-        else:
-            print("error")
-            print(self.passwords[keyword][6])
-
-        features1, features2 = self.match_signal_length(features1, features2)
-        correlation = np.corrcoef(features1.flatten(), features2.flatten())[0, 1]
-
-        print(keyword)
-        print('correlation', correlation)
         return correlation
 
     def match_signal_length(self, signal1, signal2):
