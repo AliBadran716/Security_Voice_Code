@@ -128,10 +128,8 @@ class MainApp(QMainWindow, FORM_CLASS):
         pass_mfcc,_ = passwrd.extract_features_new(sampling_rate , normalized_passwrd_data)
         distance, _  = fastdtw(test_mfcc, pass_mfcc, dist=euclidean)
         print(f"{passw} : {distance}")
+        self.passwords[passw][1] = distance
         return distance
-    
-    
-    
     
     
     
@@ -183,7 +181,7 @@ class MainApp(QMainWindow, FORM_CLASS):
                 self.voice[voice][1] = self.check_similarity(test_voice, self.voice[voice][2], voice, False)
             for password in self.passwords:
                 self.passwords[password][1] = self.check_word_similarity(test_voice, self.passwords[password][2], password)
-            max_similarity = 0
+            min_similarity = 10000000
             max_voice = 0
             Access = ""
 
@@ -193,10 +191,10 @@ class MainApp(QMainWindow, FORM_CLASS):
                 getattr(self, 'word_perc_' + str(i + 1)).setText(str(factor_percentage))
                 getattr(self, 'word_bar_' + str(i + 1)).setValue(int(factor_percentage))
 
-                if self.passwords[password][1] > max_similarity:
-                    max_similarity = self.passwords[password][1]
+                if self.passwords[password][1] < min_similarity:
+                    min_similarity = self.passwords[password][1]
                     similar_word = password
-                    if max_similarity < self.passwords[similar_word][4] or not self.passwords[similar_word][3]:
+                    if min_similarity > self.passwords[similar_word][4] or not self.passwords[similar_word][3]:
                         Access = "Access Denied"
                     else:
                         Access = "Access Granted"
