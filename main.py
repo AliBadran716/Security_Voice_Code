@@ -38,6 +38,7 @@ class MainApp(QMainWindow, FORM_CLASS):
             self.rf_model = pickle.load(model_file)
 
         self.detected_word = ""
+        self.detected_person = ""
 
         # Load the scaler
         with open('scaler.pkl', 'rb') as scaler_file:
@@ -51,9 +52,9 @@ class MainApp(QMainWindow, FORM_CLASS):
                 , True  # Have access
                 , 16000  # acceptable similarity factor
                 ,
-                ["voices/unlock_the_gate/ahmed_ali_unlock_the_gate.wav", "voices/unlock_the_gate/bedro_unlock_the_gate_2.wav",
-                 "voices/unlock_the_gate/hassan_unlock_the_gate_3.wav",
-                 "voices/unlock_the_gate/muhannad_unlock_the_gate_4.wav"],
+                ["voices/unlock_the_gate/ahmed_ali_unlock_the_gate.wav", "voices/unlock_the_gate/bedro_unlock_the_gate.wav",
+                 "voices/unlock_the_gate/hassan_unlock_the_gate.wav",
+                 "voices/unlock_the_gate/muhannad_unlock_the_gate.wav"],
                 ["ahmed_ali", "ali_badran", "hassan", "muhannad"],
                 [None, None, None, None]
             ],
@@ -71,6 +72,7 @@ class MainApp(QMainWindow, FORM_CLASS):
                  "voices/open_middle_door/muhannad_open_middle_door.wav"],
                 ["ahmed_ali", "ali_badran", "hassan", "muhannad"],
                 [None, None, None, None]
+
             ],
             "grant_me_access": [
                 "grant_me_access.wav"
@@ -86,6 +88,7 @@ class MainApp(QMainWindow, FORM_CLASS):
                  "voices/grant_me_access/muhannad_grant_me_access.wav"],
                 ["ahmed_ali", "ali_badran", "hassan", "muhannad"],
                 [None, None, None, None]
+
             ],
         }
         # voice
@@ -97,7 +100,7 @@ class MainApp(QMainWindow, FORM_CLASS):
                 True,  # Have access
                 10  # acceptable similarity factor
             ],
-            "bedro": [[],
+            "ali_badran": [[],
                       None,  # similarity factor
                       [None],
                       True,  # Have access
@@ -217,10 +220,9 @@ class MainApp(QMainWindow, FORM_CLASS):
             # predicted_class = predictions[0]
             print(predicted_class)
 
-            
 
-            # Update the UI based on the prediction
-            self.label_2.setText(f"Prediction: {predicted_class}")
+
+
 
             for password in self.passwords:
                 self.passwords[password][1] = self.check_word_similarity(test_voice, self.passwords[password][2],
@@ -249,14 +251,37 @@ class MainApp(QMainWindow, FORM_CLASS):
 
             # Get the detected word based on the minimum distance
             self.detected_word = min(self.passwords, key=lambda x: self.passwords[x][1])
+            self.check_person_similarity(test_voice)
+
+            min_similarity = 16000  # Adjusted the minimum similarity threshold
+
+            within_range_person = False
+            min_similarity = 16000  # Adjusted the minimum similarity threshold
+            # Iterate through the voices and compare distances
+            for i, voice in enumerate(self.voice):
+                # Check if the minimum distance is below the acceptable threshold
+                if self.voice[voice][1] < min_similarity and self.voice[voice][3]:
+                    within_range_person = True
+                    # Calculate the percentage based on the smaller of the two distances
+                    factor_percentage = round((12000 / self.voice[voice][1]) * 100, 3)
+                else:
+                    factor_percentage = round((10000 / self.voice[voice][1]) * 100, 3)
+
+                # Update the UI elements (assuming you are working with a GUI)
+                getattr(self, 'person_perc_' + str(i + 1)).setText(str(factor_percentage))
+                getattr(self, 'person_bar_' + str(i + 1)).setValue(int(factor_percentage))
+
+            self.detected_person = min(self.voice, key=lambda x: self.voice[x][1])
 
 
             # Determine access based on whether any password is within the range
-            if within_range:
+            if within_range and within_range_person:
                 Access = "Access Granted"
             else:
                 Access = "Access Denied"
 
+            # Update the UI based on the prediction
+            self.label_2.setText(f"Prediction: {predicted_class}")
             self.label.setText(self.detected_word)
             self.access_label.setText(Access)
 
@@ -266,16 +291,18 @@ class MainApp(QMainWindow, FORM_CLASS):
         tested_mfcc, _ = tested.extract_features_new(sampling_rate, normalized_tested_data)
         tested_features = tested_mfcc
 
-        for i in range(len(self.passwords[self.detected_word][0])):
+        for i in range(len(self.passwords[self.detected_word][5])):
             voice_instance = Voice(self.passwords[self.detected_word][5][i])
             person_data, sampling_rate = voice_instance.get_voice()
             normalized_person_data = person_data / np.max(np.abs(person_data))
             person_mfcc, _ = voice_instance.extract_features_new(sampling_rate, normalized_person_data)
             self.passwords[self.detected_word][7][i] = person_mfcc
 
-        for i in range(len(self.passwords[self.detected_word][7])):
+        for i, key in enumerate(self.passwords[self.detected_word][6]):
             dist, _ = fastdtw(tested_features, self.passwords[self.detected_word][7][i], dist=euclidean)
-            print(f"{self.passwords[self.detected_word][6][i]} : {dist}")
+            self.voice[key][1]= dist
+            # print(f"{self.voice[key]} : {self.voice[key][1]}")
+
 
     def check_word_similarity(self, tested, passwrd, passw):
         tested_data, sampling_rate = tested.get_voice()
@@ -288,7 +315,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         pass_mfcc, _ = passwrd.extract_features_new(sampling_rate, normalized_passwrd_data)
         distance, _ = fastdtw(test_mfcc, pass_mfcc, dist=euclidean)
 
-        print(f"{passw} : {distance}")
+        # print(f"{passw} : {distance}")
         self.passwords[passw][1] = distance
         return distance
 
