@@ -54,9 +54,9 @@ class MainApp(QMainWindow, FORM_CLASS):
                 ,
                 ["voices/unlock_the_gate/ahmed_ali_unlock_the_gate.wav", "voices/unlock_the_gate/bedro_unlock_the_gate.wav",
                  "voices/unlock_the_gate/hassan_unlock_the_gate.wav",
-                 "voices/unlock_the_gate/muhannad_unlock_the_gate.wav"],
-                ["ahmed_ali", "ali_badran", "hassan", "muhannad"],
-                [None, None, None, None]
+                 "voices/unlock_the_gate/muhannad_unlock_the_gate.wav","voices/unlock_the_gate/mariam_h_unlock_the_gate.wav", "voices/unlock_the_gate/camellia_unlock_the_gate.wav", "voices/unlock_the_gate/mariam_unlock_the_gate.wav", "voices/unlock_the_gate/farah_unlock_the_gate.wav"],
+                ["ahmed_ali", "ali_badran", "hassan", "muhannad", "mariam_h", "camellia", "mariam", "farah"],
+                [None, None, None, None , None, None, None, None]
             ],
             "open_middle_door": [
                 "open_middle_door.wav"
@@ -69,9 +69,9 @@ class MainApp(QMainWindow, FORM_CLASS):
                 ,
                 ["voices/open_middle_door/ahmed_ali_open_middle_door.wav", "voices/open_middle_door/bedro_open_middle_door.wav",
                  "voices/open_middle_door/hassan_open_middle_door.wav",
-                 "voices/open_middle_door/muhannad_open_middle_door.wav"],
-                ["ahmed_ali", "ali_badran", "hassan", "muhannad"],
-                [None, None, None, None]
+                 "voices/open_middle_door/muhannad_open_middle_door.wav", "voices/open_middle_door/mariam_h_open_middle_door.wav", "voices/open_middle_door/camellia_open_middle_door.wav", "voices/open_middle_door/mariam_open_middle_door.wav", "voices/open_middle_door/farah_open_middle_door.wav"],
+                ["ahmed_ali", "ali_badran", "hassan", "muhannad", "mariam_h", "camellia", "mariam", "farah"],
+                [None, None, None, None , None, None, None, None]
 
             ],
             "grant_me_access": [
@@ -85,9 +85,9 @@ class MainApp(QMainWindow, FORM_CLASS):
                 ,
                 ["voices/grant_me_access/ahmed_ali_grant_me_access.wav", "voices/grant_me_access/bedro_grant_me_access.wav",
                  "voices/grant_me_access/hassan_grant_me_access.wav",
-                 "voices/grant_me_access/muhannad_grant_me_access.wav"],
-                ["ahmed_ali", "ali_badran", "hassan", "muhannad"],
-                [None, None, None, None]
+                 "voices/grant_me_access/muhannad_grant_me_access.wav", "voices/grant_me_access/mariam_h_grant_me_access.wav", "voices/grant_me_access/camellia_grant_me_access.wav", "voices/grant_me_access/mariam_grant_me_access.wav", "voices/grant_me_access/farah_grant_me_access.wav"],
+                ["ahmed_ali", "ali_badran", "hassan", "muhannad", "mariam_h", "camellia", "mariam", "farah"],
+                [None, None, None, None , None, None, None, None]
 
             ],
         }
@@ -119,7 +119,31 @@ class MainApp(QMainWindow, FORM_CLASS):
                        [None],
                        True,  # Have access
                        10  # acceptable similarity factor
-                       ]
+                       ],
+            "mariam_h": [[],
+                          None,  # similarity factor
+                          [None],
+                          True,  # Have access
+                          10  # acceptable similarity factor
+                          ],
+            "camellia": [[],
+                            None,  # similarity factor
+                            [None],
+                            True,  # Have access
+                            10  # acceptable similarity factor
+                            ],
+            "mariam": [[],
+                            None,  # similarity factor
+                            [None],
+                            True,  # Have access
+                            10  # acceptable similarity factor
+                            ],
+            "farah": [[],
+                            None,  # similarity factor
+                            [None],
+                            True,  # Have access
+                            10  # acceptable similarity factor
+                            ],
         }
 
         self.create_password_audio_instance()  # create instance of each password
@@ -194,14 +218,15 @@ class MainApp(QMainWindow, FORM_CLASS):
             self.record_btn.setText("Stop")
             self.recorder = AudioRecorder()
             self.recorder.start_recording()
-            self.recording_timer.start(2500)  # Set timer for 2 seconds
+            self.recording_timer.start(2500)  # Set timer for 2,5seconds
         else:
             # print("Stop Recording")
             self.record_btn.setText("Start")
             self.recording_timer.stop()  # Stop the timer
             self.recorder.stop_recording()
             self.spectrogram(self.recorder.frames, 44100, self.widget)
-            self.recorder.save_audio('trial.wav')
+            self.spectrogram(self.recorder.frames, 44100, self.widget)
+            self.recorder.save_audio("trial.wav")
             test_voice = Voice('trial.wav')
             # Extract features from the recorded voice using the provided functions
             test_mfccs = self.extract_mfccs('trial.wav')
@@ -218,7 +243,7 @@ class MainApp(QMainWindow, FORM_CLASS):
             predicted_class = np.unique(predictions, return_counts=True)
             predicted_class = predicted_class[0][np.argmax(predicted_class[1])]
             # predicted_class = predictions[0]
-            print(predicted_class)
+            # print(predicted_class)
 
 
 
@@ -241,9 +266,9 @@ class MainApp(QMainWindow, FORM_CLASS):
                 if self.passwords[password][1] < min_similarity and self.passwords[password][3]:
                     within_range = True
                     # Calculate the percentage based on the smaller of the two distances
-                    factor_percentage = round((12000 / self.passwords[password][1]) * 100, 3)
+                    factor_percentage = round((7000 / self.passwords[password][1]) * 100, 3)
                 else:
-                    factor_percentage = round((10000 / self.passwords[password][1]) * 100, 3)
+                    factor_percentage = round((7000 / self.passwords[password][1]) * 100, 3)
 
                 # Update the UI elements (assuming you are working with a GUI)
                 getattr(self, 'word_perc_' + str(i + 1)).setText(str(factor_percentage))
@@ -253,36 +278,41 @@ class MainApp(QMainWindow, FORM_CLASS):
             self.detected_word = min(self.passwords, key=lambda x: self.passwords[x][1])
             self.check_person_similarity(test_voice)
 
-            min_similarity = 16000  # Adjusted the minimum similarity threshold
+            min_similarity = 14000  # Adjusted the minimum similarity threshold
 
             within_range_person = False
-            min_similarity = 16000  # Adjusted the minimum similarity threshold
             # Iterate through the voices and compare distances
             for i, voice in enumerate(self.voice):
                 # Check if the minimum distance is below the acceptable threshold
                 if self.voice[voice][1] < min_similarity and self.voice[voice][3]:
                     within_range_person = True
                     # Calculate the percentage based on the smaller of the two distances
-                    factor_percentage = round((12000 / self.voice[voice][1]) * 100, 3)
+                    factor_percentage = round((7000 / self.voice[voice][1]) * 100, 3)
                 else:
-                    factor_percentage = round((10000 / self.voice[voice][1]) * 100, 3)
+                    factor_percentage = round((7000 / self.voice[voice][1]) * 100, 3)
 
                 # Update the UI elements (assuming you are working with a GUI)
                 getattr(self, 'person_perc_' + str(i + 1)).setText(str(factor_percentage))
                 getattr(self, 'person_bar_' + str(i + 1)).setValue(int(factor_percentage))
 
             self.detected_person = min(self.voice, key=lambda x: self.voice[x][1])
+            print(self.detected_person)
 
 
             # Determine access based on whether any password is within the range
             if within_range and within_range_person:
                 Access = "Access Granted"
+                    # Update the UI based on the prediction
+                self.label_2.setText(f"Prediction: {self.detected_person}")
+                self.label.setText(self.detected_word)
             else:
                 Access = "Access Denied"
+                # Update the UI based on the prediction
+                self.label_2.setText('')
+                self.label.setText('')
 
-            # Update the UI based on the prediction
-            self.label_2.setText(f"Prediction: {predicted_class}")
-            self.label.setText(self.detected_word)
+            print(within_range, within_range_person)
+
             self.access_label.setText(Access)
 
     def check_person_similarity(self, tested):
@@ -301,7 +331,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         for i, key in enumerate(self.passwords[self.detected_word][6]):
             dist, _ = fastdtw(tested_features, self.passwords[self.detected_word][7][i], dist=euclidean)
             self.voice[key][1]= dist
-            # print(f"{self.voice[key]} : {self.voice[key][1]}")
+            print(f"{key} : {self.voice[key][1]}")
 
 
     def check_word_similarity(self, tested, passwrd, passw):
@@ -315,7 +345,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         pass_mfcc, _ = passwrd.extract_features_new(sampling_rate, normalized_passwrd_data)
         distance, _ = fastdtw(test_mfcc, pass_mfcc, dist=euclidean)
 
-        # print(f"{passw} : {distance}")
+        print(f"{passw} : {distance}")
         self.passwords[passw][1] = distance
         return distance
 
