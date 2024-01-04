@@ -222,29 +222,32 @@ class MainApp(QMainWindow, FORM_CLASS):
 
             # make the distance as a percentage where the lowest distance is the highest percentage but not 100 %
 
+            min_similarity = 16000  # Adjusted the minimum similarity threshold
 
-            min_similarity = 25000
             Access = ""
-            within_range = True
-            # if the minimum distance is greater than the acceptable distance which is 16000 then the user has no access
-            # else the user has access and set the access to the password that has the minimum distance and the progress bar to the percentage of the distance
+            within_range = False
+
+            # Iterate through the passwords and compare distances
             for i, password in enumerate(self.passwords):
-                factor_percentage = round((1 - (self.passwords[password][1] / self.passwords[password][4])) * 100, 3)
+                # Check if the minimum distance is below the acceptable threshold
+                if self.passwords[password][1] < min_similarity and self.passwords[password][3]:
+                    within_range = True
+                    # Calculate the percentage based on the smaller of the two distances
+                    factor_percentage = round((12000 / self.passwords[password][1]) * 100, 3)
+                else:
+                    factor_percentage = round((10000 / self.passwords[password][1]) * 100, 3)
+
+                # Update the UI elements (assuming you are working with a GUI)
                 getattr(self, 'word_perc_' + str(i + 1)).setText(str(factor_percentage))
                 getattr(self, 'word_bar_' + str(i + 1)).setValue(int(factor_percentage))
 
-                if not (self.passwords[password][1] < self.passwords[password][4] and within_range):
-                    within_range = False
-
-                if self.passwords[password][1] < min_similarity:
-                    min_similarity = self.passwords[password][1]
-
-
+            # Determine access based on whether any password is within the range
             if within_range:
                 Access = "Access Granted"
             else:
                 Access = "Access Denied"
-            self.label.setText(min_similarity)
+
+            # self.label.setText(min_similarity)
             self.access_label.setText(Access)
 
     def match_signal_length(self, signal1, signal2):
