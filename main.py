@@ -37,18 +37,25 @@ class MainApp(QMainWindow, FORM_CLASS):
         with open('model.pkl', 'rb') as model_file:
             self.rf_model = pickle.load(model_file)
 
+        self.detected_word = ""
+
         # Load the scaler
         with open('scaler.pkl', 'rb') as scaler_file:
             self.scaler = pickle.load(scaler_file)
         self.passwords = {
             "unlock_the_gate": [
                 "unlock_the_gate.wav"
-
                 # list of wav files stored in voice_data_base folder
                 , None  # similarity factor
                 , None  # instance
                 , True  # Have access
                 , 16000  # acceptable similarity factor
+                ,
+                ["voices/unlock_the_gate/ahmed_ali_unlock_the_gate.wav", "voices/unlock_the_gate/bedro_unlock_the_gate_2.wav",
+                 "voices/unlock_the_gate/hassan_unlock_the_gate_3.wav",
+                 "voices/unlock_the_gate/muhannad_unlock_the_gate_4.wav"],
+                ["ahmed_ali", "ali_badran", "hassan", "muhannad"],
+                [None, None, None, None]
             ],
             "open_middle_door": [
                 "open_middle_door.wav"
@@ -58,6 +65,12 @@ class MainApp(QMainWindow, FORM_CLASS):
                 , None  # instance
                 , True  # Have access
                 , 16000  # acceptable similarity factor
+                ,
+                ["voices/open_middle_door/ahmed_ali_open_middle_door.wav", "voices/open_middle_door/bedro_open_middle_door.wav",
+                 "voices/open_middle_door/hassan_open_middle_door.wav",
+                 "voices/open_middle_door/muhannad_open_middle_door.wav"],
+                ["ahmed_ali", "ali_badran", "hassan", "muhannad"],
+                [None, None, None, None]
             ],
             "grant_me_access": [
                 "grant_me_access.wav"
@@ -67,6 +80,12 @@ class MainApp(QMainWindow, FORM_CLASS):
                 , None  # instance
                 , True  # Have access
                 , 16000  # acceptable similarity factor
+                ,
+                ["voices/grant_me_access/ahmed_ali_grant_me_access.wav", "voices/grant_me_access/bedro_grant_me_access.wav",
+                 "voices/grant_me_access/hassan_grant_me_access.wav",
+                 "voices/grant_me_access/muhannad_grant_me_access.wav"],
+                ["ahmed_ali", "ali_badran", "hassan", "muhannad"],
+                [None, None, None, None]
             ],
         }
         # voice
@@ -86,11 +105,10 @@ class MainApp(QMainWindow, FORM_CLASS):
                       ],
 
             "muhannad": [[],
-
                          None,  # similarity factor
                          [None],
-                         True
-                , 10
+                         True,
+                         10
                          ],
 
             "hassan": [[],
@@ -102,21 +120,6 @@ class MainApp(QMainWindow, FORM_CLASS):
         }
 
         self.create_password_audio_instance()  # create instance of each password
-
-    def check_word_similarity(self, tested, passwrd, passw):
-        tested_data, sampling_rate = tested.get_voice()
-        passwrd_data, sampling_rate = passwrd.get_voice()
-
-        normalized_tested_data = tested_data / np.max(np.abs(tested_data))
-        normalized_passwrd_data = passwrd_data / np.max(np.abs(passwrd_data))
-
-        test_mfcc, _ = tested.extract_features_new(sampling_rate, normalized_tested_data)
-        pass_mfcc, _ = passwrd.extract_features_new(sampling_rate, normalized_passwrd_data)
-        distance, _ = fastdtw(test_mfcc, pass_mfcc, dist=euclidean)
-
-        print(f"{passw} : {distance}")
-        self.passwords[passw][1] = distance
-        return distance
 
     def handle_button(self):
         self.record_btn.clicked.connect(self.start_recording)
@@ -213,6 +216,9 @@ class MainApp(QMainWindow, FORM_CLASS):
             predicted_class = predicted_class[0][np.argmax(predicted_class[1])]
             # predicted_class = predictions[0]
             print(predicted_class)
+
+            
+
             # Update the UI based on the prediction
             self.label_2.setText(f"Prediction: {predicted_class}")
 
@@ -241,14 +247,51 @@ class MainApp(QMainWindow, FORM_CLASS):
                 getattr(self, 'word_perc_' + str(i + 1)).setText(str(factor_percentage))
                 getattr(self, 'word_bar_' + str(i + 1)).setValue(int(factor_percentage))
 
+            # Get the detected word based on the minimum distance
+            self.detected_word = min(self.passwords, key=lambda x: self.passwords[x][1])
+
+
             # Determine access based on whether any password is within the range
             if within_range:
                 Access = "Access Granted"
             else:
                 Access = "Access Denied"
 
-            # self.label.setText(min_similarity)
+            self.label.setText(self.detected_word)
             self.access_label.setText(Access)
+
+    def check_person_similarity(self, tested):
+        tested_data, sampling_rate = tested.get_voice()
+        normalized_tested_data = tested_data / np.max(np.abs(tested_data))
+        tested_mfcc, _ = tested.extract_features_new(sampling_rate, normalized_tested_data)
+        tested_features = tested_mfcc
+
+        for i in range(len(self.passwords[self.detected_word][0])):
+            voice_instance = Voice(self.passwords[self.detected_word][5][i])
+            person_data, sampling_rate = voice_instance.get_voice()
+            normalized_person_data = person_data / np.max(np.abs(person_data))
+            person_mfcc, _ = voice_instance.extract_features_new(sampling_rate, normalized_person_data)
+            self.passwords[self.detected_word][7][i] = person_mfcc
+
+        for i in range(len(self.passwords[self.detected_word][7])):
+            dist, _ = fastdtw(tested_features, self.passwords[self.detected_word][7][i], dist=euclidean)
+            print(f"{self.passwords[self.detected_word][6][i]} : {dist}")
+
+    def check_word_similarity(self, tested, passwrd, passw):
+        tested_data, sampling_rate = tested.get_voice()
+        passwrd_data, sampling_rate = passwrd.get_voice()
+
+        normalized_tested_data = tested_data / np.max(np.abs(tested_data))
+        normalized_passwrd_data = passwrd_data / np.max(np.abs(passwrd_data))
+
+        test_mfcc, _ = tested.extract_features_new(sampling_rate, normalized_tested_data)
+        pass_mfcc, _ = passwrd.extract_features_new(sampling_rate, normalized_passwrd_data)
+        distance, _ = fastdtw(test_mfcc, pass_mfcc, dist=euclidean)
+
+        print(f"{passw} : {distance}")
+        self.passwords[passw][1] = distance
+        return distance
+
 
     def match_signal_length(self, signal1, signal2):
         len1, len2 = signal1.shape[1], signal2.shape[1]
